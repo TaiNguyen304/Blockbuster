@@ -31,7 +31,8 @@ function createNewRoundState(letters) {
   return {
     visible: false,
     letters: [...letters],
-    cellColors: Array(20).fill('yellow') // 'yellow', 'blue', 'white'
+    cellColors: Array(20).fill('yellow'), // 'yellow', 'blue', 'white'
+    selectedIndices: []
   };
 }
 
@@ -116,7 +117,6 @@ io.on('connection', (socket) => {
   // Show Board (Hiện bảng)
   socket.on('board:show', (round) => {
     const r = round || gameState.currentRound;
-    // Shuffle or keep order if specified
     const letters = [...gameState.roundBoards[r].letters];
     // Randomize order for the board display
     for (let i = letters.length - 1; i > 0; i--) {
@@ -126,25 +126,43 @@ io.on('connection', (socket) => {
     gameState.roundBoards[r].letters = letters;
     gameState.roundBoards[r].visible = true;
     gameState.roundBoards[r].cellColors = Array(20).fill('yellow');
+    gameState.roundBoards[r].selectedIndices = [];
     io.emit('state:update', gameState);
+  });
+
+  // Toggle cell select
+  socket.on('board:toggle_cell_select', ({ round, index }) => {
+    const r = round || gameState.currentRound;
+    const board = gameState.roundBoards[r];
+    if (board && index >= 0 && index < 20) {
+      if (!board.selectedIndices) board.selectedIndices = [];
+      const pos = board.selectedIndices.indexOf(index);
+      if (pos > -1) {
+        board.selectedIndices.splice(pos, 1);
+      } else {
+        board.selectedIndices.push(index);
+      }
+      io.emit('state:update', gameState);
+    }
   });
 
   // Color cells
   socket.on('board:color_cells', ({ round, indices, color }) => {
     const r = round || gameState.currentRound;
-    if (gameState.roundBoards[r] && Array.isArray(indices)) {
+    const board = gameState.roundBoards[r];
+    if (board && Array.isArray(indices)) {
       indices.forEach(idx => {
         if (idx >= 0 && idx < 20) {
-          gameState.roundBoards[r].cellColors[idx] = color;
+          board.cellColors[idx] = color;
         }
       });
+      board.selectedIndices = [];
       io.emit('state:update', gameState);
     }
   });
 
   // Buzzer events
   socket.on('buzzer:control', (action) => {
-    // action can be: 'open', 'lock', 'reset_open', 'reset_lock'
     if (action === 'open') {
       gameState.buzzer.locked = false;
     } else if (action === 'lock') {
@@ -160,11 +178,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('buzzer:press', ({ team }) => {
-    // If not locked and no one has pressed yet
     if (!gameState.buzzer.locked && !gameState.buzzer.pressedBy) {
       if (team === 'player' || team === 'couple') {
         gameState.buzzer.pressedBy = team;
-        gameState.buzzer.locked = true; // lock buzzers after first press
+        gameState.buzzer.locked = true;
         io.emit('state:update', gameState);
         io.emit('buzzer:alert', { team });
       }
@@ -201,7 +218,6 @@ io.on('connection', (socket) => {
         const sheet = workbook.Sheets[sheetName];
         const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
         const result = [];
-        // Extract letters from column A (ignoring header)
         for (let i = 0; i < data.length; i++) {
           const row = data[i];
           if (row && row[0] !== undefined && row[0] !== null) {
@@ -222,10 +238,10 @@ io.on('connection', (socket) => {
       if (l2) gameState.roundBoards[2].letters = l2;
       if (l3) gameState.roundBoards[3].letters = l3;
 
-      // Reset visible and colors
       [1, 2, 3].forEach(r => {
         gameState.roundBoards[r].visible = false;
         gameState.roundBoards[r].cellColors = Array(20).fill('yellow');
+        gameState.roundBoards[r].selectedIndices = [];
       });
 
       io.emit('state:update', gameState);

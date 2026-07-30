@@ -23,7 +23,7 @@
     }
     .hex-cell:hover {
       filter: brightness(1.15);
-      transform: scale(1.02);
+      transform: scale(1.03);
       transform-origin: center;
     }
     .toast {
@@ -33,11 +33,19 @@
       z-index: 9999;
       transition: all 0.3s ease;
     }
+    button, .tab-btn {
+      transition: all 0.2s ease;
+    }
+    button:hover, .tab-btn:hover {
+      background-color: #f97316 !important; /* Orange */
+      color: #ffffff !important;
+      border-color: #fb923c !important;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-900 text-slate-100 selection:bg-amber-500 selection:text-slate-900">
 
-  <!-- Toast Notification Container (No Alert used) -->
+  <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast flex flex-col gap-2"></div>
 
   <!-- Top Navigation Header -->
@@ -54,15 +62,15 @@
       </div>
     </div>
 
-    <!-- Excel Upload Button -->
+    <!-- Excel Upload & Viewer Link Buttons -->
     <div class="flex items-center gap-3">
       <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden">
-      <button id="btnUploadExcel" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm shadow-lg shadow-emerald-900/30 border border-emerald-400/30 flex items-center gap-2 transition active:scale-95">
+      <button id="btnUploadExcel" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:bg-orange-500 hover:text-white text-white font-bold text-sm shadow-lg border border-emerald-400/30 flex items-center gap-2 transition active:scale-95">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         <span>Nhập đề từ Excel</span>
       </button>
 
-      <a href="/viewer" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
+      <a href="/viewer" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-orange-500 hover:text-white text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
         <span>Mở Viewer</span>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
       </a>
@@ -126,26 +134,26 @@
             <span id="selectedCount" class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Đã chọn: 0 ô</span>
           </h2>
 
-          <button id="btnShowBoard" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-base shadow-lg shadow-amber-500/20 transition active:scale-95 flex items-center justify-center gap-2">
+          <button id="btnShowBoard" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:bg-orange-500 hover:text-white text-slate-950 font-black text-base shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
             <span>HIỆN BẢNG</span>
           </button>
 
           <!-- Color Buttons for Selected Cells -->
           <div class="grid grid-cols-2 gap-3 pt-1">
-            <button id="btnColorBlue" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm shadow-lg shadow-blue-900/40 border border-blue-400/30 transition active:scale-95 flex items-center justify-center gap-2">
+            <button id="btnColorBlue" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-orange-500 hover:text-white text-white font-black text-sm shadow-lg border border-blue-400/30 transition active:scale-95 flex items-center justify-center gap-2">
               <span class="w-4 h-4 rounded-full bg-blue-400 border border-white"></span>
               <span>TÔ XANH</span>
             </button>
 
-            <button id="btnColorWhite" class="py-3 px-4 rounded-xl bg-slate-100 hover:bg-white text-slate-900 font-black text-sm shadow-lg shadow-slate-900/40 border border-slate-300 transition active:scale-95 flex items-center justify-center gap-2">
+            <button id="btnColorWhite" class="py-3 px-4 rounded-xl bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-900 font-black text-sm shadow-lg border border-slate-300 transition active:scale-95 flex items-center justify-center gap-2">
               <span class="w-4 h-4 rounded-full bg-white border border-slate-400"></span>
               <span>TÔ TRẮNG</span>
             </button>
           </div>
         </div>
 
-        <!-- Buzzer Controls Panel (Visible for Vòng 1 & Vòng 2) -->
+        <!-- Buzzer Controls Panel -->
         <div id="panelBuzzerControls" class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl">
           <h2 class="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
             <span>ĐIỀU KHIỂN CHUÔNG</span>
@@ -153,22 +161,22 @@
           </h2>
 
           <div class="grid grid-cols-2 gap-3">
-            <button id="btnOpenBuzzer" class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnOpenBuzzer" class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               MỞ CHUÔNG
             </button>
-            <button id="btnLockBuzzer" class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnLockBuzzer" class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               KHÓA CHUÔNG
             </button>
-            <button id="btnResetOpenBuzzer" class="py-3 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnResetOpenBuzzer" class="py-3 px-3 rounded-xl bg-teal-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               RESET VÀ MỞ
             </button>
-            <button id="btnResetLockBuzzer" class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnResetLockBuzzer" class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               RESET VÀ KHÓA
             </button>
           </div>
         </div>
 
-        <!-- Timer Controls Panel (Visible for Vòng đặc biệt) -->
+        <!-- Timer Controls Panel -->
         <div id="panelTimerControls" class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl hidden">
           <h2 class="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
             <span>ĐIỀU KHIỂN ĐỒNG HỒ</span>
@@ -176,16 +184,16 @@
           </h2>
 
           <div class="grid grid-cols-2 gap-3">
-            <button id="btnStart60s" class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnStart60s" class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               BẮT ĐẦU 60S
             </button>
-            <button id="btnPauseTimer" class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnPauseTimer" class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               TẠM DỪNG
             </button>
-            <button id="btnContinueTimer" class="py-3 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnContinueTimer" class="py-3 px-3 rounded-xl bg-indigo-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               TIẾP TỤC
             </button>
-            <button id="btnResetTimer" class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnResetTimer" class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               RESET ĐỒNG HỒ
             </button>
           </div>
@@ -201,10 +209,10 @@
       <button id="tabRound1" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20">
         VÒNG 1
       </button>
-      <button id="tabRound2" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600">
+      <button id="tabRound2" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-orange-500 hover:text-white">
         VÒNG 2
       </button>
-      <button id="tabRound3" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600">
+      <button id="tabRound3" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-orange-500 hover:text-white">
         VÒNG ĐẶC BIỆT
       </button>
     </div>
@@ -212,6 +220,22 @@
 
   <!-- Controller Logic Script -->
   <script>
+    // Disable DevTools
+    function disableDevTools() {
+      document.addEventListener('contextmenu', (e) => e.preventDefault());
+      document.addEventListener('keydown', (e) => {
+        if (
+          e.key === 'F12' ||
+          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+          (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.key === 'S' || e.key === 's'))
+        ) {
+          e.preventDefault();
+          return false;
+        }
+      });
+    }
+    disableDevTools();
+
     const ONDER_URL = "https://blockbuster-1i37.onrender.com";
     let socket;
     try {
@@ -221,9 +245,8 @@
     }
 
     let gameState = null;
-    let selectedCellIndices = new Set();
 
-    // UI Toast Notification (No alert/confirm)
+    // Toast Notification
     function showToast(msg, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -240,11 +263,11 @@
       }, 3500);
     }
 
-    // Hex Geometry generator
-    function getPointyHexPolygon(cx, cy, r) {
+    // Flat Hex Geometry (rotated 30 degrees)
+    function getFlatHexPolygon(cx, cy, r) {
       let pts = [];
       for (let i = 0; i < 6; i++) {
-        let angle = (60 * i - 30) * Math.PI / 180;
+        let angle = (60 * i) * Math.PI / 180;
         let x = cx + r * Math.cos(angle);
         let y = cy + r * Math.sin(angle);
         pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
@@ -262,32 +285,29 @@
       const roundBoard = gameState.roundBoards[r];
       const letters = roundBoard ? roundBoard.letters : [];
       const cellColors = roundBoard ? roundBoard.cellColors : [];
+      const selectedIndices = (roundBoard && roundBoard.selectedIndices) ? roundBoard.selectedIndices : [];
 
       const hexRadius = 42;
-      const colStep = Math.sqrt(3) * hexRadius; // ~72.7
-      const rowStep = 1.5 * hexRadius; // 63
+      const colStep = 1.5 * hexRadius; // 63
+      const rowStep = Math.sqrt(3) * hexRadius; // ~72.74
       const startX = 130;
       const startY = 100;
 
       // Outer Decorative Blue & White Hexes
       const outerHexes = [
-        // Left blue column
         { col: -1, row: 0, type: 'blue' },
         { col: -1, row: 1, type: 'blue' },
         { col: -1, row: 2, type: 'blue' },
         { col: -1, row: 3, type: 'blue' },
-        // Right blue column
         { col: 5, row: 0, type: 'blue' },
         { col: 5, row: 1, type: 'blue' },
         { col: 5, row: 2, type: 'blue' },
         { col: 5, row: 3, type: 'blue' },
-        // Top white row
         { col: 0, row: -1, type: 'white' },
         { col: 1, row: -1, type: 'white' },
         { col: 2, row: -1, type: 'white' },
         { col: 3, row: -1, type: 'white' },
         { col: 4, row: -1, type: 'white' },
-        // Bottom white row
         { col: 0, row: 4, type: 'white' },
         { col: 1, row: 4, type: 'white' },
         { col: 2, row: 4, type: 'white' },
@@ -298,7 +318,7 @@
       outerHexes.forEach(o => {
         let cx = startX + o.col * colStep;
         let cy = startY + o.row * rowStep + (Math.abs(o.col) % 2 === 1 ? rowStep * 0.5 : 0);
-        let pts = getPointyHexPolygon(cx, cy, hexRadius);
+        let pts = getFlatHexPolygon(cx, cy, hexRadius);
 
         const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         poly.setAttribute('points', pts);
@@ -315,18 +335,18 @@
         for (let row = 0; row < 4; row++) {
           let cx = startX + col * colStep;
           let cy = startY + row * rowStep + (col % 2 === 1 ? rowStep * 0.5 : 0);
-          let pts = getPointyHexPolygon(cx, cy, hexRadius);
+          let pts = getFlatHexPolygon(cx, cy, hexRadius);
 
           const cellIdx = index;
           const letter = letters[cellIdx] || '';
           const colorState = cellColors[cellIdx] || 'yellow';
-          const isSelected = selectedCellIndices.has(cellIdx);
+          const isSelected = selectedIndices.includes(cellIdx);
 
           let fillColor = '#FFC700'; // Default gold/yellow
           let textColor = '#0F172A';
 
           if (isSelected) {
-            fillColor = '#F97316'; // Orange when selected on Controller
+            fillColor = '#F97316'; // Orange when selected
             textColor = '#FFFFFF';
           } else if (colorState === 'blue') {
             fillColor = '#2563EB'; // Blue
@@ -350,7 +370,7 @@
           if (letter) {
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', cx);
-            text.setAttribute('y', cy + 10);
+            text.setAttribute('y', cy + 9);
             text.setAttribute('text-anchor', 'middle');
             text.setAttribute('fill', textColor);
             text.setAttribute('font-size', '28');
@@ -367,20 +387,16 @@
     }
 
     function toggleCellSelection(idx) {
-      if (selectedCellIndices.has(idx)) {
-        selectedCellIndices.delete(idx);
-      } else {
-        selectedCellIndices.add(idx);
-      }
-      document.getElementById('selectedCount').textContent = `Đã chọn: ${selectedCellIndices.size} ô`;
-      renderBoard();
+      if (!gameState) return;
+      socket.emit('board:toggle_cell_select', {
+        round: gameState.currentRound,
+        index: idx
+      });
     }
 
     // Switch Round tabs
     function switchRound(round) {
       socket.emit('round:switch', round);
-      selectedCellIndices.clear();
-      document.getElementById('selectedCount').textContent = `Đã chọn: 0 ô`;
     }
 
     function updateUIState() {
@@ -391,13 +407,18 @@
       const roundNames = { 1: 'VÒNG 1', 2: 'VÒNG 2', 3: 'VÒNG ĐẶC BIỆT' };
       document.getElementById('activeRoundLabel').textContent = roundNames[r] || `VÒNG ${r}`;
 
+      // Update Selected Count
+      const roundBoard = gameState.roundBoards[r];
+      const selectedIndices = (roundBoard && roundBoard.selectedIndices) ? roundBoard.selectedIndices : [];
+      document.getElementById('selectedCount').textContent = `Đã chọn: ${selectedIndices.length} ô`;
+
       // Update Tabs styling
       [1, 2, 3].forEach(roundNum => {
         const btn = document.getElementById(`tabRound${roundNum}`);
         if (roundNum === r) {
           btn.className = 'tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20';
         } else {
-          btn.className = 'tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600';
+          btn.className = 'tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-orange-500 hover:text-white';
         }
       });
 
@@ -489,32 +510,32 @@
     };
 
     document.getElementById('btnColorBlue').onclick = () => {
-      if (selectedCellIndices.size === 0) {
+      const r = gameState ? gameState.currentRound : 1;
+      const selected = gameState?.roundBoards[r]?.selectedIndices || [];
+      if (selected.length === 0) {
         showToast('Vui lòng chọn ít nhất 1 ô trên bảng!', 'error');
         return;
       }
       socket.emit('board:color_cells', {
-        round: gameState.currentRound,
-        indices: Array.from(selectedCellIndices),
+        round: r,
+        indices: selected,
         color: 'blue'
       });
-      selectedCellIndices.clear();
-      document.getElementById('selectedCount').textContent = `Đã chọn: 0 ô`;
       showToast('Đã tô xanh các ô được chọn!', 'success');
     };
 
     document.getElementById('btnColorWhite').onclick = () => {
-      if (selectedCellIndices.size === 0) {
+      const r = gameState ? gameState.currentRound : 1;
+      const selected = gameState?.roundBoards[r]?.selectedIndices || [];
+      if (selected.length === 0) {
         showToast('Vui lòng chọn ít nhất 1 ô trên bảng!', 'error');
         return;
       }
       socket.emit('board:color_cells', {
-        round: gameState.currentRound,
-        indices: Array.from(selectedCellIndices),
+        round: r,
+        indices: selected,
         color: 'white'
       });
-      selectedCellIndices.clear();
-      document.getElementById('selectedCount').textContent = `Đã chọn: 0 ô`;
       showToast('Đã tô trắng các ô được chọn!', 'success');
     };
 
