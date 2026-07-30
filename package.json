@@ -1,0 +1,21 @@
+{
+  "name": "blockbuster-game-show",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Blockbuster Game Show - 5 Interactive Screens with Socket.IO",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "echo 'Build complete'"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.14.0"
+  }
+}
