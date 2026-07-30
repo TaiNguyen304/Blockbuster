@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player - Blockbuster Game Show</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-weight: bold !important;
+    }
+    body {
+      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+    .buzzer-unlocked {
+      background: radial-gradient(circle, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 0 40px rgba(239, 68, 68, 0.8), inset 0 4px 10px rgba(255, 255, 255, 0.4);
+      animation: pulse-glow 1.5s infinite alternate;
+      cursor: pointer;
+    }
+    .buzzer-locked {
+      background: #334155;
+      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.6);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    @keyframes pulse-glow {
+      0% { transform: scale(1); box-shadow: 0 0 25px rgba(239, 68, 68, 0.8); }
+      100% { transform: scale(1.04); box-shadow: 0 0 50px rgba(239, 68, 68, 1); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row w-full select-none overflow-hidden">
+
+  <!-- 80% Left Screen: Viewer Board Layout -->
+  <div class="w-full md:w-[80%] min-h-screen p-4 md:p-6 flex flex-col justify-between items-center border-r-4 border-slate-700/80">
+    
+    <!-- Header Banner -->
+    <header class="w-full max-w-5xl flex items-center justify-between bg-slate-800/80 border-2 border-slate-700/80 rounded-2xl px-6 py-4 shadow-2xl backdrop-blur-md">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30">
+          B
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-black text-white tracking-wider flex items-center gap-3">
+            MÀN HÌNH PLAYER <span id="roundHeader" class="text-amber-400 bg-amber-500/20 px-3 py-1 rounded-xl border-2 border-amber-500/40 text-lg md:text-xl">VÒNG 1</span>
+          </h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 bg-slate-900/90 border-2 border-slate-700 px-4 py-2 rounded-xl text-amber-400 text-sm">
+        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>TRỰC TIẾP</span>
+      </div>
+    </header>
+
+    <!-- Main Board Canvas Center -->
+    <main class="w-full max-w-5xl flex-1 flex flex-col items-center justify-center my-4 relative">
+      
+      <!-- Waiting placeholder when board is hidden -->
+      <div id="hiddenPlaceholder" class="flex flex-col items-center justify-center gap-4 p-12 bg-slate-800/40 border-4 border-dashed border-slate-700 rounded-3xl backdrop-blur-sm max-w-lg w-full text-center">
+        <div class="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 animate-pulse">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+        </div>
+        <h2 class="text-2xl font-black text-slate-300">ĐANG CHỜ HIỆN BẢNG</h2>
+        <p class="text-sm font-bold text-slate-400">Chuẩn bị chuông để dành quyền trả lời...</p>
+      </div>
+
+      <!-- Active Hex Board SVG -->
+      <div id="boardContainer" class="w-full flex justify-center items-center hidden">
+        <svg id="playerHexBoard" viewBox="0 0 650 500" class="w-full max-w-[650px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+          <!-- Rendered by JS -->
+        </svg>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- 20% Right Screen: 3 Vertical Boxes + Bottom Right Buzzer Button -->
+  <div class="w-full md:w-[20%] min-h-screen bg-slate-900/90 p-4 md:p-6 flex flex-col justify-between items-center shadow-2xl gap-4">
+    
+    <!-- Top 3 Stacked Boxes -->
+    <div class="w-full flex flex-col gap-4">
+      <!-- Box 1: PLAYER -->
+      <div id="boxPlayer" class="w-full h-24 md:h-28 rounded-2xl bg-purple-600 border-4 border-purple-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
+        <span class="text-xl md:text-2xl font-black tracking-widest">PLAYER</span>
+        <span id="playerStatusText" class="text-xs font-extrabold mt-0.5 opacity-80">CHỜ CHUÔNG</span>
+      </div>
+
+      <!-- Box 2: COUPLE -->
+      <div id="boxCouple" class="w-full h-24 md:h-28 rounded-2xl bg-purple-600 border-4 border-purple-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
+        <span class="text-xl md:text-2xl font-black tracking-widest">COUPLE</span>
+        <span id="coupleStatusText" class="text-xs font-extrabold mt-0.5 opacity-80">CHỜ CHUÔNG</span>
+      </div>
+
+      <!-- Box 3: CLOCK / TIMER -->
+      <div id="boxClock" class="w-full h-24 md:h-28 rounded-2xl bg-red-600 border-4 border-red-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
+        <span class="text-[10px] font-black tracking-widest uppercase opacity-90">ĐỒNG HỒ</span>
+        <span id="playerTimerDisplay" class="text-3xl md:text-4xl font-black tracking-wider text-white">60s</span>
+      </div>
+    </div>
+
+    <!-- Bottom Right BUZZER BUTTON -->
+    <div class="w-full mt-auto pt-2 flex flex-col items-center">
+      <button id="btnPlayerBuzzer" disabled class="w-full h-28 md:h-36 rounded-3xl border-4 border-slate-700 flex flex-col items-center justify-center gap-1 text-white text-center transition-all duration-200 active:scale-95 buzzer-locked select-none">
+        <svg class="w-10 h-10 text-white drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+        <span id="buzzerBtnText" class="text-lg md:text-xl font-black tracking-wider">CHUÔNG KHÓA</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Player Script -->
+  <script>
+    const ONDER_URL = "https://blockbuster-1i37.onrender.com";
+    let socket;
+    try {
+      socket = io(window.location.origin.includes("onrender.com") ? window.location.origin : (window.location.origin || ONDER_URL));
+    } catch(e) {
+      socket = io();
+    }
+
+    let gameState = null;
+
+    function getPointyHexPolygon(cx, cy, r) {
+      let pts = [];
+      for (let i = 0; i < 6; i++) {
+        let angle = (60 * i - 30) * Math.PI / 180;
+        let x = cx + r * Math.cos(angle);
+        let y = cy + r * Math.sin(angle);
+        pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      }
+      return pts.join(' ');
+    }
+
+    function renderBoard() {
+      const svg = document.getElementById('playerHexBoard');
+      const placeholder = document.getElementById('hiddenPlaceholder');
+      const boardContainer = document.getElementById('boardContainer');
+      svg.innerHTML = '';
+
+      if (!gameState) return;
+
+      const r = gameState.currentRound;
+      const roundBoard = gameState.roundBoards[r];
+
+      // Update Round Name Header
+      const roundNames = { 1: 'VÒNG 1', 2: 'VÒNG 2', 3: 'VÒNG ĐẶC BIỆT' };
+      document.getElementById('roundHeader').textContent = roundNames[r] || `VÒNG ${r}`;
+      document.getElementById('playerTimerDisplay').textContent = `${gameState.timer.seconds}s`;
+
+      // Update Right Panel Boxes
+      const boxPlayer = document.getElementById('boxPlayer');
+      const playerStatusText = document.getElementById('playerStatusText');
+      const boxCouple = document.getElementById('boxCouple');
+      const coupleStatusText = document.getElementById('coupleStatusText');
+
+      if (gameState.buzzer.pressedBy === 'player') {
+        boxPlayer.className = 'w-full h-24 md:h-28 rounded-2xl bg-white border-4 border-slate-300 flex flex-col items-center justify-center text-black shadow-[0_0_30px_rgba(255,255,255,0.8)] scale-105 transition-all duration-300';
+        playerStatusText.textContent = 'ĐÃ BẤM CHUÔNG!';
+      } else {
+        boxPlayer.className = 'w-full h-24 md:h-28 rounded-2xl bg-purple-600 border-4 border-purple-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300';
+        playerStatusText.textContent = 'CHỜ CHUÔNG';
+      }
+
+      if (gameState.buzzer.pressedBy === 'couple') {
+        boxCouple.className = 'w-full h-24 md:h-28 rounded-2xl bg-blue-600 border-4 border-blue-400 flex flex-col items-center justify-center text-white shadow-[0_0_30px_rgba(37,99,235,0.8)] scale-105 transition-all duration-300';
+        coupleStatusText.textContent = 'ĐÃ BẤM CHUÔNG!';
+      } else {
+        boxCouple.className = 'w-full h-24 md:h-28 rounded-2xl bg-purple-600 border-4 border-purple-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300';
+        coupleStatusText.textContent = 'CHỜ CHUÔNG';
+      }
+
+      // Update Buzzer Button State
+      const btnBuzzer = document.getElementById('btnPlayerBuzzer');
+      const buzzerBtnText = document.getElementById('buzzerBtnText');
+
+      if (gameState.buzzer.locked || gameState.buzzer.pressedBy) {
+        btnBuzzer.disabled = true;
+        btnBuzzer.className = 'w-full h-28 md:h-36 rounded-3xl border-4 border-slate-700 flex flex-col items-center justify-center gap-1 text-slate-300 text-center transition-all duration-200 buzzer-locked select-none';
+        buzzerBtnText.textContent = gameState.buzzer.pressedBy ? 'ĐÃ CÓ NGƯỜI BẤM' : 'CHUÔNG KHÓA';
+      } else {
+        btnBuzzer.disabled = false;
+        btnBuzzer.className = 'w-full h-28 md:h-36 rounded-3xl border-4 border-red-300 flex flex-col items-center justify-center gap-1 text-white text-center transition-all duration-200 active:scale-95 buzzer-unlocked select-none';
+        buzzerBtnText.textContent = 'BẤM CHUÔNG!';
+      }
+
+      if (!roundBoard || !roundBoard.visible) {
+        placeholder.classList.remove('hidden');
+        boardContainer.classList.add('hidden');
+        return;
+      }
+
+      placeholder.classList.add('hidden');
+      boardContainer.classList.remove('hidden');
+
+      const letters = roundBoard.letters || [];
+      const cellColors = roundBoard.cellColors || [];
+
+      const hexRadius = 42;
+      const colStep = Math.sqrt(3) * hexRadius;
+      const rowStep = 1.5 * hexRadius;
+      const startX = 130;
+      const startY = 100;
+
+      // Outer Decorative Blue & White Hexes
+      const outerHexes = [
+        { col: -1, row: 0, type: 'blue' },
+        { col: -1, row: 1, type: 'blue' },
+        { col: -1, row: 2, type: 'blue' },
+        { col: -1, row: 3, type: 'blue' },
+        { col: 5, row: 0, type: 'blue' },
+        { col: 5, row: 1, type: 'blue' },
+        { col: 5, row: 2, type: 'blue' },
+        { col: 5, row: 3, type: 'blue' },
+        { col: 0, row: -1, type: 'white' },
+        { col: 1, row: -1, type: 'white' },
+        { col: 2, row: -1, type: 'white' },
+        { col: 3, row: -1, type: 'white' },
+        { col: 4, row: -1, type: 'white' },
+        { col: 0, row: 4, type: 'white' },
+        { col: 1, row: 4, type: 'white' },
+        { col: 2, row: 4, type: 'white' },
+        { col: 3, row: 4, type: 'white' },
+        { col: 4, row: 4, type: 'white' }
+      ];
+
+      outerHexes.forEach(o => {
+        let cx = startX + o.col * colStep;
+        let cy = startY + o.row * rowStep + (Math.abs(o.col) % 2 === 1 ? rowStep * 0.5 : 0);
+        let pts = getPointyHexPolygon(cx, cy, hexRadius);
+
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        poly.setAttribute('points', pts);
+        poly.setAttribute('fill', o.type === 'blue' ? '#0284C7' : '#F1F5F9');
+        poly.setAttribute('stroke', '#0F172A');
+        poly.setAttribute('stroke-width', '4');
+        poly.setAttribute('opacity', '0.9');
+        svg.appendChild(poly);
+      });
+
+      // 20 Center Playable Hexes
+      let index = 0;
+      for (let col = 0; col < 5; col++) {
+        for (let row = 0; row < 4; row++) {
+          let cx = startX + col * colStep;
+          let cy = startY + row * rowStep + (col % 2 === 1 ? rowStep * 0.5 : 0);
+          let pts = getPointyHexPolygon(cx, cy, hexRadius);
+
+          const cellIdx = index;
+          const letter = letters[cellIdx] || '';
+          const colorState = cellColors[cellIdx] || 'yellow';
+
+          let fillColor = '#FFC700';
+          let textColor = '#0F172A';
+
+          if (colorState === 'blue') {
+            fillColor = '#2563EB';
+            textColor = '#FFFFFF';
+          } else if (colorState === 'white') {
+            fillColor = '#FFFFFF';
+            textColor = '#000000';
+          }
+
+          const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+          const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          poly.setAttribute('points', pts);
+          poly.setAttribute('fill', fillColor);
+          poly.setAttribute('stroke', '#0F172A');
+          poly.setAttribute('stroke-width', '4');
+          g.appendChild(poly);
+
+          if (letter) {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', cx);
+            text.setAttribute('y', cy + 10);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('fill', textColor);
+            text.setAttribute('font-size', '30');
+            text.setAttribute('font-weight', '900');
+            text.setAttribute('font-family', 'Plus Jakarta Sans, sans-serif');
+            text.textContent = letter;
+            g.appendChild(text);
+          }
+
+          svg.appendChild(g);
+          index++;
+        }
+      }
+    }
+
+    // Buzzer click action
+    document.getElementById('btnPlayerBuzzer').onclick = () => {
+      if (gameState && !gameState.buzzer.locked && !gameState.buzzer.pressedBy) {
+        socket.emit('buzzer:press', { team: 'player' });
+      }
+    };
+
+    socket.on('state:update', (data) => {
+      gameState = data;
+      renderBoard();
+    });
+
+    socket.on('timer:tick', ({ seconds }) => {
+      document.getElementById('playerTimerDisplay').textContent = `${seconds}s`;
+    });
+
+    socket.emit('get:state');
+  </script>
+</body>
+</html>

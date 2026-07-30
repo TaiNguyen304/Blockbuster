@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viewer - Blockbuster Game Show</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-weight: bold !important;
+    }
+    body {
+      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-4 md:p-6 select-none">
+
+  <!-- Header Banner -->
+  <header class="w-full max-w-6xl mx-auto flex items-center justify-between bg-slate-800/80 border-2 border-slate-700/80 rounded-2xl px-6 py-4 shadow-2xl backdrop-blur-md">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30">
+        B
+      </div>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-black text-white tracking-wider flex items-center gap-3">
+          BLOCKBUSTER <span id="roundHeader" class="text-amber-400 bg-amber-500/20 px-3 py-1 rounded-xl border-2 border-amber-500/40 text-lg md:text-xl">VÒNG 1</span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- Clock Display -->
+    <div class="flex items-center gap-3 bg-slate-900/90 border-2 border-slate-700 px-5 py-2.5 rounded-2xl shadow-inner">
+      <svg class="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span id="viewerTimer" class="text-3xl md:text-4xl font-black text-amber-400 tracking-wider">60s</span>
+    </div>
+  </header>
+
+  <!-- Main Board Canvas Center -->
+  <main class="w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center my-4 relative">
+    
+    <!-- Waiting placeholder when board is hidden -->
+    <div id="hiddenPlaceholder" class="flex flex-col items-center justify-center gap-4 p-12 bg-slate-800/40 border-4 border-dashed border-slate-700 rounded-3xl backdrop-blur-sm max-w-lg w-full text-center">
+      <div class="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 animate-pulse">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+      </div>
+      <h2 class="text-2xl font-black text-slate-300">ĐANG CHỜ HIỆN BẢNG</h2>
+      <p class="text-sm font-bold text-slate-400">Ban tổ chức sẽ hiển thị bảng chữ cái ngay sau đây...</p>
+    </div>
+
+    <!-- Active Hex Board SVG -->
+    <div id="boardContainer" class="w-full flex justify-center items-center hidden">
+      <svg id="viewerHexBoard" viewBox="0 0 650 500" class="w-full max-w-[700px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+        <!-- Rendered by JS -->
+      </svg>
+    </div>
+
+  </main>
+
+  <!-- Viewer Script -->
+  <script>
+    const ONDER_URL = "https://blockbuster-1i37.onrender.com";
+    let socket;
+    try {
+      socket = io(window.location.origin.includes("onrender.com") ? window.location.origin : (window.location.origin || ONDER_URL));
+    } catch(e) {
+      socket = io();
+    }
+
+    let gameState = null;
+
+    function getPointyHexPolygon(cx, cy, r) {
+      let pts = [];
+      for (let i = 0; i < 6; i++) {
+        let angle = (60 * i - 30) * Math.PI / 180;
+        let x = cx + r * Math.cos(angle);
+        let y = cy + r * Math.sin(angle);
+        pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      }
+      return pts.join(' ');
+    }
+
+    function renderBoard() {
+      const svg = document.getElementById('viewerHexBoard');
+      const placeholder = document.getElementById('hiddenPlaceholder');
+      const boardContainer = document.getElementById('boardContainer');
+      svg.innerHTML = '';
+
+      if (!gameState) return;
+
+      const r = gameState.currentRound;
+      const roundBoard = gameState.roundBoards[r];
+
+      // Update Round Name Header
+      const roundNames = { 1: 'VÒNG 1', 2: 'VÒNG 2', 3: 'VÒNG ĐẶC BIỆT' };
+      document.getElementById('roundHeader').textContent = roundNames[r] || `VÒNG ${r}`;
+      document.getElementById('viewerTimer').textContent = `${gameState.timer.seconds}s`;
+
+      if (!roundBoard || !roundBoard.visible) {
+        placeholder.classList.remove('hidden');
+        boardContainer.classList.add('hidden');
+        return;
+      }
+
+      placeholder.classList.add('hidden');
+      boardContainer.classList.remove('hidden');
+
+      const letters = roundBoard.letters || [];
+      const cellColors = roundBoard.cellColors || [];
+
+      const hexRadius = 42;
+      const colStep = Math.sqrt(3) * hexRadius; // ~72.7
+      const rowStep = 1.5 * hexRadius; // 63
+      const startX = 130;
+      const startY = 100;
+
+      // Outer Decorative Blue & White Hexes
+      const outerHexes = [
+        // Left blue column
+        { col: -1, row: 0, type: 'blue' },
+        { col: -1, row: 1, type: 'blue' },
+        { col: -1, row: 2, type: 'blue' },
+        { col: -1, row: 3, type: 'blue' },
+        // Right blue column
+        { col: 5, row: 0, type: 'blue' },
+        { col: 5, row: 1, type: 'blue' },
+        { col: 5, row: 2, type: 'blue' },
+        { col: 5, row: 3, type: 'blue' },
+        // Top white row
+        { col: 0, row: -1, type: 'white' },
+        { col: 1, row: -1, type: 'white' },
+        { col: 2, row: -1, type: 'white' },
+        { col: 3, row: -1, type: 'white' },
+        { col: 4, row: -1, type: 'white' },
+        // Bottom white row
+        { col: 0, row: 4, type: 'white' },
+        { col: 1, row: 4, type: 'white' },
+        { col: 2, row: 4, type: 'white' },
+        { col: 3, row: 4, type: 'white' },
+        { col: 4, row: 4, type: 'white' }
+      ];
+
+      outerHexes.forEach(o => {
+        let cx = startX + o.col * colStep;
+        let cy = startY + o.row * rowStep + (Math.abs(o.col) % 2 === 1 ? rowStep * 0.5 : 0);
+        let pts = getPointyHexPolygon(cx, cy, hexRadius);
+
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        poly.setAttribute('points', pts);
+        poly.setAttribute('fill', o.type === 'blue' ? '#0284C7' : '#F1F5F9');
+        poly.setAttribute('stroke', '#0F172A');
+        poly.setAttribute('stroke-width', '4');
+        poly.setAttribute('opacity', '0.9');
+        svg.appendChild(poly);
+      });
+
+      // 20 Center Playable Hexes
+      let index = 0;
+      for (let col = 0; col < 5; col++) {
+        for (let row = 0; row < 4; row++) {
+          let cx = startX + col * colStep;
+          let cy = startY + row * rowStep + (col % 2 === 1 ? rowStep * 0.5 : 0);
+          let pts = getPointyHexPolygon(cx, cy, hexRadius);
+
+          const cellIdx = index;
+          const letter = letters[cellIdx] || '';
+          const colorState = cellColors[cellIdx] || 'yellow';
+
+          let fillColor = '#FFC700'; // Gold/Yellow
+          let textColor = '#0F172A';
+
+          if (colorState === 'blue') {
+            fillColor = '#2563EB'; // Blue
+            textColor = '#FFFFFF';
+          } else if (colorState === 'white') {
+            fillColor = '#FFFFFF'; // White
+            textColor = '#000000';
+          }
+
+          const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+          const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          poly.setAttribute('points', pts);
+          poly.setAttribute('fill', fillColor);
+          poly.setAttribute('stroke', '#0F172A');
+          poly.setAttribute('stroke-width', '4');
+          g.appendChild(poly);
+
+          if (letter) {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', cx);
+            text.setAttribute('y', cy + 10);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('fill', textColor);
+            text.setAttribute('font-size', '30');
+            text.setAttribute('font-weight', '900');
+            text.setAttribute('font-family', 'Plus Jakarta Sans, sans-serif');
+            text.textContent = letter;
+            g.appendChild(text);
+          }
+
+          svg.appendChild(g);
+          index++;
+        }
+      }
+    }
+
+    socket.on('state:update', (data) => {
+      gameState = data;
+      renderBoard();
+    });
+
+    socket.on('timer:tick', ({ seconds }) => {
+      document.getElementById('viewerTimer').textContent = `${seconds}s`;
+    });
+
+    socket.emit('get:state');
+  </script>
+</body>
+</html>

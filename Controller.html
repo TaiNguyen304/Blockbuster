@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controller - Blockbuster Game Show</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-weight: bold !important;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    .hex-cell {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .hex-cell:hover {
+      filter: brightness(1.15);
+      transform: scale(1.02);
+      transform-origin: center;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-900 text-slate-100 selection:bg-amber-500 selection:text-slate-900">
+
+  <!-- Toast Notification Container (No Alert used) -->
+  <div id="toastContainer" class="toast flex flex-col gap-2"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="bg-slate-800/90 border-b border-slate-700/80 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xl backdrop-blur-md">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
+        B
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+          CONTROLLER <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">BLOCKBUSTER</span>
+        </h1>
+        <p class="text-xs text-slate-400 font-medium">Màn hình điều khiển Game Show trung tâm</p>
+      </div>
+    </div>
+
+    <!-- Excel Upload Button -->
+    <div class="flex items-center gap-3">
+      <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden">
+      <button id="btnUploadExcel" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm shadow-lg shadow-emerald-900/30 border border-emerald-400/30 flex items-center gap-2 transition active:scale-95">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <span>Nhập đề từ Excel</span>
+      </button>
+
+      <a href="/viewer" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
+        <span>Mở Viewer</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto flex flex-col gap-6">
+
+    <!-- Active Round Status Banner -->
+    <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="text-slate-400 text-sm font-semibold">Vòng hiện tại:</span>
+        <span id="activeRoundLabel" class="text-amber-400 font-black text-lg bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">VÒNG 1</span>
+        <span id="boardStatusBadge" class="text-xs px-2.5 py-1 rounded-md font-bold bg-slate-700 text-slate-300">Chưa hiện bảng</span>
+      </div>
+
+      <!-- Live Buzzer & Timer Status Indicators -->
+      <div class="flex items-center gap-4 text-xs font-bold">
+        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700">
+          <span class="text-slate-400">Chuông:</span>
+          <span id="statusBuzzer" class="text-red-400 font-extrabold">ĐÃ KHÓA</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-700">
+          <span class="text-slate-400">Đồng hồ:</span>
+          <span id="statusTimer" class="text-amber-400 font-extrabold">60s</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Board & Control Panel Split -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- Left Column: Hex Grid Interactive Canvas (7 cols) -->
+      <div class="lg:col-span-7 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center min-h-[460px] shadow-xl relative overflow-hidden">
+        <div class="absolute top-3 left-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+          Màn hình xem trước ô chữ (Bấm vào ô để chọn)
+        </div>
+
+        <div class="w-full flex justify-center items-center py-2">
+          <svg id="hexBoardSvg" viewBox="0 0 650 500" class="w-full max-w-[580px] h-auto drop-shadow-2xl select-none">
+            <!-- Rendered by JS -->
+          </svg>
+        </div>
+
+        <div class="mt-2 text-xs text-slate-400 flex items-center gap-4 font-semibold">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block border border-black"></span> Mặc định (Vàng)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white"></span> Đang chọn (Cam)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block"></span> Tô xanh</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-400"></span> Tô trắng</span>
+        </div>
+      </div>
+
+      <!-- Right Column: Control Buttons Panel (5 cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-5">
+
+        <!-- Board Control Buttons -->
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl">
+          <h2 class="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+            <span>ĐIỀU KHIỂN BẢNG</span>
+            <span id="selectedCount" class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Đã chọn: 0 ô</span>
+          </h2>
+
+          <button id="btnShowBoard" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-base shadow-lg shadow-amber-500/20 transition active:scale-95 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+            <span>HIỆN BẢNG</span>
+          </button>
+
+          <!-- Color Buttons for Selected Cells -->
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <button id="btnColorBlue" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm shadow-lg shadow-blue-900/40 border border-blue-400/30 transition active:scale-95 flex items-center justify-center gap-2">
+              <span class="w-4 h-4 rounded-full bg-blue-400 border border-white"></span>
+              <span>TÔ XANH</span>
+            </button>
+
+            <button id="btnColorWhite" class="py-3 px-4 rounded-xl bg-slate-100 hover:bg-white text-slate-900 font-black text-sm shadow-lg shadow-slate-900/40 border border-slate-300 transition active:scale-95 flex items-center justify-center gap-2">
+              <span class="w-4 h-4 rounded-full bg-white border border-slate-400"></span>
+              <span>TÔ TRẮNG</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Buzzer Controls Panel (Visible for Vòng 1 & Vòng 2) -->
+        <div id="panelBuzzerControls" class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl">
+          <h2 class="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+            <span>ĐIỀU KHIỂN CHUÔNG</span>
+            <span id="pressedByBadge" class="text-xs px-2 py-0.5 rounded font-bold bg-slate-700 text-slate-300">Chưa ai bấm</span>
+          </h2>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btnOpenBuzzer" class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+              MỞ CHUÔNG
+            </button>
+            <button id="btnLockBuzzer" class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+              KHÓA CHUÔNG
+            </button>
+            <button id="btnResetOpenBuzzer" class="py-3 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+              RESET VÀ MỞ
+            </button>
+            <button id="btnResetLockBuzzer" class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+              RESET VÀ KHÓA
+            </button>
+          </div>
+        </div>
+
+        <!-- Timer Controls Panel (Visible for Vòng đặc biệt) -->
+        <div id="panelTimerControls" class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl hidden">
+          <h2 class="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+            <span>ĐIỀU KHIỂN ĐỒNG HỒ</span>
+            <span id="timerValueDisplay" class="text-xl font-black text-amber-400">60s</span>
+          </h2>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btnStart60s" class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+              BẮT ĐẦU 60S
+            </button>
+            <button id="btnPauseTimer" class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+              TẠM DỪNG
+            </button>
+            <button id="btnContinueTimer" class="py-3 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+              TIẾP TỤC
+            </button>
+            <button id="btnResetTimer" class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+              RESET ĐỒNG HỒ
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation Round Buttons -->
+  <footer class="bg-slate-800/90 border-t border-slate-700/80 py-4 px-6 mt-auto">
+    <div class="max-w-xl mx-auto grid grid-cols-3 gap-3 md:gap-4">
+      <button id="tabRound1" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20">
+        VÒNG 1
+      </button>
+      <button id="tabRound2" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600">
+        VÒNG 2
+      </button>
+      <button id="tabRound3" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600">
+        VÒNG ĐẶC BIỆT
+      </button>
+    </div>
+  </footer>
+
+  <!-- Controller Logic Script -->
+  <script>
+    const ONDER_URL = "https://blockbuster-1i37.onrender.com";
+    let socket;
+    try {
+      socket = io(window.location.origin.includes("onrender.com") ? window.location.origin : (window.location.origin || ONDER_URL));
+    } catch(e) {
+      socket = io();
+    }
+
+    let gameState = null;
+    let selectedCellIndices = new Set();
+
+    // UI Toast Notification (No alert/confirm)
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const bgClass = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-slate-700';
+      toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-2xl font-bold text-sm border border-white/20 flex items-center gap-2 transform transition-all duration-300 translate-y-[-10px] opacity-0`;
+      toast.innerHTML = `<span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove('translate-y-[-10px]', 'opacity-0');
+      }, 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Hex Geometry generator
+    function getPointyHexPolygon(cx, cy, r) {
+      let pts = [];
+      for (let i = 0; i < 6; i++) {
+        let angle = (60 * i - 30) * Math.PI / 180;
+        let x = cx + r * Math.cos(angle);
+        let y = cy + r * Math.sin(angle);
+        pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      }
+      return pts.join(' ');
+    }
+
+    // Render Hexagon Board SVG
+    function renderBoard() {
+      const svg = document.getElementById('hexBoardSvg');
+      svg.innerHTML = '';
+
+      if (!gameState) return;
+      const r = gameState.currentRound;
+      const roundBoard = gameState.roundBoards[r];
+      const letters = roundBoard ? roundBoard.letters : [];
+      const cellColors = roundBoard ? roundBoard.cellColors : [];
+
+      const hexRadius = 42;
+      const colStep = Math.sqrt(3) * hexRadius; // ~72.7
+      const rowStep = 1.5 * hexRadius; // 63
+      const startX = 130;
+      const startY = 100;
+
+      // Outer Decorative Blue & White Hexes
+      const outerHexes = [
+        // Left blue column
+        { col: -1, row: 0, type: 'blue' },
+        { col: -1, row: 1, type: 'blue' },
+        { col: -1, row: 2, type: 'blue' },
+        { col: -1, row: 3, type: 'blue' },
+        // Right blue column
+        { col: 5, row: 0, type: 'blue' },
+        { col: 5, row: 1, type: 'blue' },
+        { col: 5, row: 2, type: 'blue' },
+        { col: 5, row: 3, type: 'blue' },
+        // Top white row
+        { col: 0, row: -1, type: 'white' },
+        { col: 1, row: -1, type: 'white' },
+        { col: 2, row: -1, type: 'white' },
+        { col: 3, row: -1, type: 'white' },
+        { col: 4, row: -1, type: 'white' },
+        // Bottom white row
+        { col: 0, row: 4, type: 'white' },
+        { col: 1, row: 4, type: 'white' },
+        { col: 2, row: 4, type: 'white' },
+        { col: 3, row: 4, type: 'white' },
+        { col: 4, row: 4, type: 'white' }
+      ];
+
+      outerHexes.forEach(o => {
+        let cx = startX + o.col * colStep;
+        let cy = startY + o.row * rowStep + (Math.abs(o.col) % 2 === 1 ? rowStep * 0.5 : 0);
+        let pts = getPointyHexPolygon(cx, cy, hexRadius);
+
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        poly.setAttribute('points', pts);
+        poly.setAttribute('fill', o.type === 'blue' ? '#0284C7' : '#F1F5F9');
+        poly.setAttribute('stroke', '#0F172A');
+        poly.setAttribute('stroke-width', '4');
+        poly.setAttribute('opacity', '0.85');
+        svg.appendChild(poly);
+      });
+
+      // 20 Interactive Center Playable Hexes (5 cols x 4 rows)
+      let index = 0;
+      for (let col = 0; col < 5; col++) {
+        for (let row = 0; row < 4; row++) {
+          let cx = startX + col * colStep;
+          let cy = startY + row * rowStep + (col % 2 === 1 ? rowStep * 0.5 : 0);
+          let pts = getPointyHexPolygon(cx, cy, hexRadius);
+
+          const cellIdx = index;
+          const letter = letters[cellIdx] || '';
+          const colorState = cellColors[cellIdx] || 'yellow';
+          const isSelected = selectedCellIndices.has(cellIdx);
+
+          let fillColor = '#FFC700'; // Default gold/yellow
+          let textColor = '#0F172A';
+
+          if (isSelected) {
+            fillColor = '#F97316'; // Orange when selected on Controller
+            textColor = '#FFFFFF';
+          } else if (colorState === 'blue') {
+            fillColor = '#2563EB'; // Blue
+            textColor = '#FFFFFF';
+          } else if (colorState === 'white') {
+            fillColor = '#FFFFFF'; // White
+            textColor = '#000000';
+          }
+
+          const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          g.setAttribute('class', 'hex-cell');
+          g.onclick = () => toggleCellSelection(cellIdx);
+
+          const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          poly.setAttribute('points', pts);
+          poly.setAttribute('fill', fillColor);
+          poly.setAttribute('stroke', isSelected ? '#FFFFFF' : '#0F172A');
+          poly.setAttribute('stroke-width', isSelected ? '5' : '3.5');
+          g.appendChild(poly);
+
+          if (letter) {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', cx);
+            text.setAttribute('y', cy + 10);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('fill', textColor);
+            text.setAttribute('font-size', '28');
+            text.setAttribute('font-weight', '900');
+            text.setAttribute('font-family', 'Plus Jakarta Sans, sans-serif');
+            text.textContent = letter;
+            g.appendChild(text);
+          }
+
+          svg.appendChild(g);
+          index++;
+        }
+      }
+    }
+
+    function toggleCellSelection(idx) {
+      if (selectedCellIndices.has(idx)) {
+        selectedCellIndices.delete(idx);
+      } else {
+        selectedCellIndices.add(idx);
+      }
+      document.getElementById('selectedCount').textContent = `Đã chọn: ${selectedCellIndices.size} ô`;
+      renderBoard();
+    }
+
+    // Switch Round tabs
+    function switchRound(round) {
+      socket.emit('round:switch', round);
+      selectedCellIndices.clear();
+      document.getElementById('selectedCount').textContent = `Đã chọn: 0 ô`;
+    }
+
+    function updateUIState() {
+      if (!gameState) return;
+      const r = gameState.currentRound;
+
+      // Update Active Round Label
+      const roundNames = { 1: 'VÒNG 1', 2: 'VÒNG 2', 3: 'VÒNG ĐẶC BIỆT' };
+      document.getElementById('activeRoundLabel').textContent = roundNames[r] || `VÒNG ${r}`;
+
+      // Update Tabs styling
+      [1, 2, 3].forEach(roundNum => {
+        const btn = document.getElementById(`tabRound${roundNum}`);
+        if (roundNum === r) {
+          btn.className = 'tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20';
+        } else {
+          btn.className = 'tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600';
+        }
+      });
+
+      // Update Board Status Badge
+      const boardState = gameState.roundBoards[r];
+      const badge = document.getElementById('boardStatusBadge');
+      if (boardState && boardState.visible) {
+        badge.textContent = 'Đang hiện bảng';
+        badge.className = 'text-xs px-2.5 py-1 rounded-md font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+      } else {
+        badge.textContent = 'Chưa hiện bảng';
+        badge.className = 'text-xs px-2.5 py-1 rounded-md font-bold bg-slate-700 text-slate-300';
+      }
+
+      // Show/Hide Buzzer vs Timer panels
+      const buzzerPanel = document.getElementById('panelBuzzerControls');
+      const timerPanel = document.getElementById('panelTimerControls');
+
+      if (r === 3) {
+        buzzerPanel.classList.add('hidden');
+        timerPanel.classList.remove('hidden');
+      } else {
+        buzzerPanel.classList.remove('hidden');
+        timerPanel.classList.add('hidden');
+      }
+
+      // Buzzer status indicator
+      const statusBuzzer = document.getElementById('statusBuzzer');
+      const pressedByBadge = document.getElementById('pressedByBadge');
+      if (gameState.buzzer.locked) {
+        statusBuzzer.textContent = 'ĐÃ KHÓA';
+        statusBuzzer.className = 'text-rose-400 font-extrabold';
+      } else {
+        statusBuzzer.textContent = 'ĐÃ MỞ';
+        statusBuzzer.className = 'text-emerald-400 font-extrabold';
+      }
+
+      if (gameState.buzzer.pressedBy) {
+        pressedByBadge.textContent = gameState.buzzer.pressedBy === 'player' ? 'PLAYER BẤM!' : 'COUPLE BẤM!';
+        pressedByBadge.className = gameState.buzzer.pressedBy === 'player' ? 'text-xs px-2 py-0.5 rounded font-black bg-white text-slate-950 shadow' : 'text-xs px-2 py-0.5 rounded font-black bg-blue-600 text-white shadow';
+      } else {
+        pressedByBadge.textContent = 'Chưa ai bấm';
+        pressedByBadge.className = 'text-xs px-2 py-0.5 rounded font-bold bg-slate-700 text-slate-300';
+      }
+
+      // Timer status indicator
+      const statusTimer = document.getElementById('statusTimer');
+      const timerValueDisplay = document.getElementById('timerValueDisplay');
+      statusTimer.textContent = `${gameState.timer.seconds}s${gameState.timer.running ? ' (Chạy)' : ''}`;
+      timerValueDisplay.textContent = `${gameState.timer.seconds}s`;
+
+      renderBoard();
+    }
+
+    // Socket Event Listeners
+    socket.on('state:update', (data) => {
+      gameState = data;
+      updateUIState();
+    });
+
+    socket.on('timer:tick', ({ seconds }) => {
+      if (gameState) {
+        gameState.timer.seconds = seconds;
+        document.getElementById('statusTimer').textContent = `${seconds}s (Chạy)`;
+        document.getElementById('timerValueDisplay').textContent = `${seconds}s`;
+      }
+    });
+
+    socket.on('buzzer:alert', ({ team }) => {
+      showToast(`🔔 ${team.toUpperCase()} VỪA BẤM CHUÔNG!`, 'success');
+    });
+
+    socket.on('excel:upload_success', ({ message }) => {
+      showToast(message, 'success');
+    });
+
+    socket.on('excel:upload_error', ({ message }) => {
+      showToast(message, 'error');
+    });
+
+    // Control Buttons Setup
+    document.getElementById('tabRound1').onclick = () => switchRound(1);
+    document.getElementById('tabRound2').onclick = () => switchRound(2);
+    document.getElementById('tabRound3').onclick = () => switchRound(3);
+
+    document.getElementById('btnShowBoard').onclick = () => {
+      socket.emit('board:show', gameState ? gameState.currentRound : 1);
+      showToast('Đã phát tín hiệu HIỆN BẢNG!', 'success');
+    };
+
+    document.getElementById('btnColorBlue').onclick = () => {
+      if (selectedCellIndices.size === 0) {
+        showToast('Vui lòng chọn ít nhất 1 ô trên bảng!', 'error');
+        return;
+      }
+      socket.emit('board:color_cells', {
+        round: gameState.currentRound,
+        indices: Array.from(selectedCellIndices),
+        color: 'blue'
+      });
+      selectedCellIndices.clear();
+      document.getElementById('selectedCount').textContent = `Đã chọn: 0 ô`;
+      showToast('Đã tô xanh các ô được chọn!', 'success');
+    };
+
+    document.getElementById('btnColorWhite').onclick = () => {
+      if (selectedCellIndices.size === 0) {
+        showToast('Vui lòng chọn ít nhất 1 ô trên bảng!', 'error');
+        return;
+      }
+      socket.emit('board:color_cells', {
+        round: gameState.currentRound,
+        indices: Array.from(selectedCellIndices),
+        color: 'white'
+      });
+      selectedCellIndices.clear();
+      document.getElementById('selectedCount').textContent = `Đã chọn: 0 ô`;
+      showToast('Đã tô trắng các ô được chọn!', 'success');
+    };
+
+    // Buzzer Buttons
+    document.getElementById('btnOpenBuzzer').onclick = () => socket.emit('buzzer:control', 'open');
+    document.getElementById('btnLockBuzzer').onclick = () => socket.emit('buzzer:control', 'lock');
+    document.getElementById('btnResetOpenBuzzer').onclick = () => socket.emit('buzzer:control', 'reset_open');
+    document.getElementById('btnResetLockBuzzer').onclick = () => socket.emit('buzzer:control', 'reset_lock');
+
+    // Timer Buttons
+    document.getElementById('btnStart60s').onclick = () => socket.emit('timer:control', 'start');
+    document.getElementById('btnPauseTimer').onclick = () => socket.emit('timer:control', 'pause');
+    document.getElementById('btnContinueTimer').onclick = () => socket.emit('timer:control', 'continue');
+    document.getElementById('btnResetTimer').onclick = () => socket.emit('timer:control', 'reset');
+
+    // Excel Upload Handler
+    const btnUpload = document.getElementById('btnUploadExcel');
+    const inputExcel = document.getElementById('excelInput');
+
+    btnUpload.onclick = () => inputExcel.click();
+    inputExcel.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const arrayBuffer = evt.target.result;
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        socket.emit('excel:upload', base64);
+        inputExcel.value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
+    // Initial load
+    socket.emit('get:state');
+  </script>
+</body>
+</html>
