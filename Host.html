@@ -250,6 +250,9 @@
             if (isSelected) {
               fillColor = '#F97316'; // Orange when selected
               textColor = '#FFFFFF';
+            } else if (colorState === 'black') {
+              fillColor = '#0F172A'; // Black
+              textColor = '#FFFFFF';
             } else if (colorState === 'yellow' || colorState === 'blue') {
               fillColor = '#FFC700'; // Yellow when colored in Round 3
               textColor = '#0F172A';
