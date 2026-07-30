@@ -27,11 +27,11 @@ const defaultLetters = {
   3: ["P", "H", "U", "A", "I", "Y", "Ê", "Ơ", "T", "B", "C", "N", "L", "Ă", "O", "X", "G", "M", "Đ", "R"]
 };
 
-function createNewRoundState(letters) {
+function createNewRoundState(letters, isRound3 = false) {
   return {
     visible: false,
     letters: [...letters],
-    cellColors: Array(20).fill('yellow'), // 'yellow', 'blue', 'white'
+    cellColors: Array(20).fill(isRound3 ? 'white' : 'yellow'), // 'yellow', 'blue', 'white'
     selectedIndices: []
   };
 }
@@ -41,7 +41,7 @@ let gameState = {
   roundBoards: {
     1: createNewRoundState(defaultLetters[1]),
     2: createNewRoundState(defaultLetters[2]),
-    3: createNewRoundState(defaultLetters[3])
+    3: createNewRoundState(defaultLetters[3], true)
   },
   buzzer: {
     locked: true,
@@ -125,7 +125,7 @@ io.on('connection', (socket) => {
     }
     gameState.roundBoards[r].letters = letters;
     gameState.roundBoards[r].visible = true;
-    gameState.roundBoards[r].cellColors = Array(20).fill('yellow');
+    gameState.roundBoards[r].cellColors = Array(20).fill(r === 3 ? 'white' : 'yellow');
     gameState.roundBoards[r].selectedIndices = [];
     io.emit('state:update', gameState);
   });
@@ -240,7 +240,7 @@ io.on('connection', (socket) => {
 
       [1, 2, 3].forEach(r => {
         gameState.roundBoards[r].visible = false;
-        gameState.roundBoards[r].cellColors = Array(20).fill('yellow');
+        gameState.roundBoards[r].cellColors = Array(20).fill(r === 3 ? 'white' : 'yellow');
         gameState.roundBoards[r].selectedIndices = [];
       });
 

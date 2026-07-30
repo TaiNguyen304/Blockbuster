@@ -65,7 +65,7 @@
     <!-- Excel Upload & Viewer Link Buttons -->
     <div class="flex items-center gap-3">
       <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden">
-      <button id="btnUploadExcel" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:bg-orange-500 hover:text-white text-white font-bold text-sm shadow-lg border border-emerald-400/30 flex items-center gap-2 transition active:scale-95">
+      <button id="btnUploadExcel" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-orange-500 hover:to-orange-500 hover:text-white text-white font-bold text-sm shadow-lg border border-emerald-400/30 flex items-center gap-2 transition active:scale-95">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         <span>Nhập đề từ Excel</span>
       </button>
@@ -117,10 +117,17 @@
         </div>
 
         <div class="mt-2 text-xs text-slate-400 flex items-center gap-4 font-semibold">
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block border border-black"></span> Mặc định (Vàng)</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white"></span> Đang chọn (Cam)</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block"></span> Tô xanh</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-400"></span> Tô trắng</span>
+          <div id="legendRound12" class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block border border-black"></span> Mặc định (Vàng)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white"></span> Đang chọn (Cam)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block"></span> Tô xanh</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-400"></span> Tô trắng</span>
+          </div>
+          <div id="legendRound3" class="flex items-center gap-4 hidden">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-400"></span> Mặc định (Trắng)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white"></span> Đang chọn (Cam)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block border border-black"></span> Tô vàng</span>
+          </div>
         </div>
       </div>
 
@@ -134,13 +141,13 @@
             <span id="selectedCount" class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Đã chọn: 0 ô</span>
           </h2>
 
-          <button id="btnShowBoard" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:bg-orange-500 hover:text-white text-slate-950 font-black text-base shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+          <button id="btnShowBoard" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-orange-500 hover:to-orange-500 hover:text-white text-slate-950 font-black text-base shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
             <span>HIỆN BẢNG</span>
           </button>
 
           <!-- Color Buttons for Selected Cells -->
-          <div class="grid grid-cols-2 gap-3 pt-1">
+          <div id="round12ColorGroup" class="grid grid-cols-2 gap-3 pt-1">
             <button id="btnColorBlue" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-orange-500 hover:text-white text-white font-black text-sm shadow-lg border border-blue-400/30 transition active:scale-95 flex items-center justify-center gap-2">
               <span class="w-4 h-4 rounded-full bg-blue-400 border border-white"></span>
               <span>TÔ XANH</span>
@@ -149,6 +156,13 @@
             <button id="btnColorWhite" class="py-3 px-4 rounded-xl bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-900 font-black text-sm shadow-lg border border-slate-300 transition active:scale-95 flex items-center justify-center gap-2">
               <span class="w-4 h-4 rounded-full bg-white border border-slate-400"></span>
               <span>TÔ TRẮNG</span>
+            </button>
+          </div>
+
+          <div id="round3ColorGroup" class="pt-1 hidden">
+            <button id="btnColorYellow" class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-orange-500 hover:text-white text-slate-950 font-black text-sm shadow-lg border border-amber-400/30 transition active:scale-95 flex items-center justify-center gap-2">
+              <span class="w-4 h-4 rounded-full bg-amber-400 border border-black"></span>
+              <span>TÔ VÀNG</span>
             </button>
           </div>
         </div>
@@ -291,14 +305,18 @@
       const colStep = 1.5 * hexRadius; // 63
       const rowStep = Math.sqrt(3) * hexRadius; // ~72.74
       const startX = 130;
-      const startY = 100;
+      const startY = 110;
 
-      // Outer Decorative Blue & White Hexes
+      const isRound3 = (r === 3);
+
+      // Outer Decorative Blue & White Hexes (5 left, 5 right, 5 top, 5 bottom)
       const outerHexes = [
+        { col: -1, row: -1, type: 'blue' },
         { col: -1, row: 0, type: 'blue' },
         { col: -1, row: 1, type: 'blue' },
         { col: -1, row: 2, type: 'blue' },
         { col: -1, row: 3, type: 'blue' },
+        { col: 5, row: -1, type: 'blue' },
         { col: 5, row: 0, type: 'blue' },
         { col: 5, row: 1, type: 'blue' },
         { col: 5, row: 2, type: 'blue' },
@@ -322,7 +340,9 @@
 
         const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         poly.setAttribute('points', pts);
-        poly.setAttribute('fill', o.type === 'blue' ? '#0284C7' : '#F1F5F9');
+        // In Round 3, outer decorative hexes are ALL YELLOW (#FFC700)
+        const outerFill = isRound3 ? '#FFC700' : (o.type === 'blue' ? '#0284C7' : '#F1F5F9');
+        poly.setAttribute('fill', outerFill);
         poly.setAttribute('stroke', '#0F172A');
         poly.setAttribute('stroke-width', '4');
         poly.setAttribute('opacity', '0.85');
@@ -339,21 +359,38 @@
 
           const cellIdx = index;
           const letter = letters[cellIdx] || '';
-          const colorState = cellColors[cellIdx] || 'yellow';
+          const colorState = cellColors[cellIdx] || (isRound3 ? 'white' : 'yellow');
           const isSelected = selectedIndices.includes(cellIdx);
 
-          let fillColor = '#FFC700'; // Default gold/yellow
+          let fillColor = '#FFC700';
           let textColor = '#0F172A';
 
-          if (isSelected) {
-            fillColor = '#F97316'; // Orange when selected
-            textColor = '#FFFFFF';
-          } else if (colorState === 'blue') {
-            fillColor = '#2563EB'; // Blue
-            textColor = '#FFFFFF';
-          } else if (colorState === 'white') {
-            fillColor = '#FFFFFF'; // White
-            textColor = '#000000';
+          if (isRound3) {
+            if (isSelected) {
+              fillColor = '#F97316'; // Orange when selected
+              textColor = '#FFFFFF';
+            } else if (colorState === 'yellow' || colorState === 'blue') {
+              fillColor = '#FFC700'; // Yellow when colored in Round 3
+              textColor = '#0F172A';
+            } else {
+              fillColor = '#FFFFFF'; // Default White in Round 3
+              textColor = '#0F172A';
+            }
+          } else {
+            // Round 1 & 2
+            if (isSelected) {
+              fillColor = '#F97316'; // Orange when selected
+              textColor = '#FFFFFF';
+            } else if (colorState === 'blue') {
+              fillColor = '#2563EB'; // Blue
+              textColor = '#FFFFFF';
+            } else if (colorState === 'white') {
+              fillColor = '#FFFFFF'; // White
+              textColor = '#000000';
+            } else {
+              fillColor = '#FFC700'; // Default Yellow
+              textColor = '#0F172A';
+            }
           }
 
           const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -433,16 +470,28 @@
         badge.className = 'text-xs px-2.5 py-1 rounded-md font-bold bg-slate-700 text-slate-300';
       }
 
-      // Show/Hide Buzzer vs Timer panels
+      // Show/Hide Buzzer vs Timer panels & Color Groups
       const buzzerPanel = document.getElementById('panelBuzzerControls');
       const timerPanel = document.getElementById('panelTimerControls');
+      const round12ColorGroup = document.getElementById('round12ColorGroup');
+      const round3ColorGroup = document.getElementById('round3ColorGroup');
+      const legendRound12 = document.getElementById('legendRound12');
+      const legendRound3 = document.getElementById('legendRound3');
 
       if (r === 3) {
         buzzerPanel.classList.add('hidden');
         timerPanel.classList.remove('hidden');
+        round12ColorGroup.classList.add('hidden');
+        round3ColorGroup.classList.remove('hidden');
+        legendRound12.classList.add('hidden');
+        legendRound3.classList.remove('hidden');
       } else {
         buzzerPanel.classList.remove('hidden');
         timerPanel.classList.add('hidden');
+        round12ColorGroup.classList.remove('hidden');
+        round3ColorGroup.classList.add('hidden');
+        legendRound12.classList.remove('hidden');
+        legendRound3.classList.add('hidden');
       }
 
       // Buzzer status indicator
@@ -537,6 +586,21 @@
         color: 'white'
       });
       showToast('Đã tô trắng các ô được chọn!', 'success');
+    };
+
+    document.getElementById('btnColorYellow').onclick = () => {
+      const r = gameState ? gameState.currentRound : 3;
+      const selected = gameState?.roundBoards[r]?.selectedIndices || [];
+      if (selected.length === 0) {
+        showToast('Vui lòng chọn ít nhất 1 ô trên bảng!', 'error');
+        return;
+      }
+      socket.emit('board:color_cells', {
+        round: r,
+        indices: selected,
+        color: 'yellow'
+      });
+      showToast('Đã tô vàng các ô được chọn!', 'success');
     };
 
     // Buzzer Buttons

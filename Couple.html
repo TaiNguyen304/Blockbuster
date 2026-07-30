@@ -228,14 +228,18 @@
       const colStep = 1.5 * hexRadius; // 63
       const rowStep = Math.sqrt(3) * hexRadius; // ~72.74
       const startX = 130;
-      const startY = 100;
+      const startY = 110;
 
-      // Outer Decorative Blue & White Hexes
+      const isRound3 = (r === 3);
+
+      // Outer Decorative Blue & White Hexes (5 left, 5 right, 5 top, 5 bottom)
       const outerHexes = [
+        { col: -1, row: -1, type: 'blue' },
         { col: -1, row: 0, type: 'blue' },
         { col: -1, row: 1, type: 'blue' },
         { col: -1, row: 2, type: 'blue' },
         { col: -1, row: 3, type: 'blue' },
+        { col: 5, row: -1, type: 'blue' },
         { col: 5, row: 0, type: 'blue' },
         { col: 5, row: 1, type: 'blue' },
         { col: 5, row: 2, type: 'blue' },
@@ -259,7 +263,9 @@
 
         const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         poly.setAttribute('points', pts);
-        poly.setAttribute('fill', o.type === 'blue' ? '#0284C7' : '#F1F5F9');
+        // In Round 3, outer decorative hexes are ALL YELLOW (#FFC700)
+        const outerFill = isRound3 ? '#FFC700' : (o.type === 'blue' ? '#0284C7' : '#F1F5F9');
+        poly.setAttribute('fill', outerFill);
         poly.setAttribute('stroke', '#0F172A');
         poly.setAttribute('stroke-width', '4');
         poly.setAttribute('opacity', '0.9');
@@ -276,21 +282,38 @@
 
           const cellIdx = index;
           const letter = letters[cellIdx] || '';
-          const colorState = cellColors[cellIdx] || 'yellow';
+          const colorState = cellColors[cellIdx] || (isRound3 ? 'white' : 'yellow');
           const isSelected = selectedIndices.includes(cellIdx);
 
           let fillColor = '#FFC700';
           let textColor = '#0F172A';
 
-          if (isSelected) {
-            fillColor = '#F97316'; // Orange when selected on Controller
-            textColor = '#FFFFFF';
-          } else if (colorState === 'blue') {
-            fillColor = '#2563EB';
-            textColor = '#FFFFFF';
-          } else if (colorState === 'white') {
-            fillColor = '#FFFFFF';
-            textColor = '#000000';
+          if (isRound3) {
+            if (isSelected) {
+              fillColor = '#F97316'; // Orange when selected
+              textColor = '#FFFFFF';
+            } else if (colorState === 'yellow' || colorState === 'blue') {
+              fillColor = '#FFC700'; // Yellow when colored in Round 3
+              textColor = '#0F172A';
+            } else {
+              fillColor = '#FFFFFF'; // Default White in Round 3
+              textColor = '#0F172A';
+            }
+          } else {
+            // Round 1 & 2
+            if (isSelected) {
+              fillColor = '#F97316'; // Orange when selected
+              textColor = '#FFFFFF';
+            } else if (colorState === 'blue') {
+              fillColor = '#2563EB'; // Blue
+              textColor = '#FFFFFF';
+            } else if (colorState === 'white') {
+              fillColor = '#FFFFFF'; // White
+              textColor = '#000000';
+            } else {
+              fillColor = '#FFC700'; // Default Yellow
+              textColor = '#0F172A';
+            }
           }
 
           const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
