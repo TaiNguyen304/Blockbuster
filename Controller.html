@@ -14,8 +14,14 @@
     }
     body {
       font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
-      background-color: #0f172a;
+      background-image: url('bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
       color: #f8fafc;
+      min-height: 100vh;
+      position: relative;
     }
     .hex-cell-outer {
       cursor: pointer;
@@ -48,7 +54,7 @@
 
     /* SVG 3D Animation Styles */
     svg {
-      perspective: 1000px;
+      perspective: 1200px;
       transform-style: preserve-3d;
     }
 
@@ -56,9 +62,10 @@
       transform-box: fill-box;
       transform-origin: center;
       transform-style: preserve-3d;
+      transition: transform 0.3s ease;
     }
 
-    /* 1. Animation HIỆN BẢNG: Xoay ngang 3D theo trục dọc (Y-axis) + To dần */
+    /* 1. Animation HIỆN BẢNG: Xoay ngang 3D (Y-axis) ngược chiều kim đồng hồ + To dần */
     .anim-show-board {
       animation: showBoardEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     }
@@ -74,7 +81,7 @@
       }
     }
 
-    /* 2. Animation ô được chọn: Nhấp nháy liên tục giữa màu hiện tại của ô và màu đen */
+    /* 2. Animation ô được chọn: Chỉ nhấp nháy đổi màu */
     .anim-selected-blink {
       animation: selectedBlink 0.65s infinite alternate ease-in-out !important;
     }
@@ -88,27 +95,33 @@
       }
     }
 
-    /* 3. Animation khi tô màu ô: Xoay 180 độ ngược chiều kim đồng hồ theo trục dọc (3D Y-axis) */
+    /* 3. Animation khi tô màu ô: Xoay 3D 180 độ lật mặt theo chiều Y + Nẩy 3D ra ngoài */
     .anim-color-rotate {
-      animation: colorRotate180 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      animation: colorRotate3D 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
-    @keyframes colorRotate180 {
+    @keyframes colorRotate3D {
       0% {
-        transform: rotateY(0deg);
+        transform: perspective(600px) rotateY(0deg) translateZ(0px);
+      }
+      50% {
+        transform: perspective(600px) rotateY(-90deg) translateZ(60px) scale(1.15);
       }
       100% {
-        transform: rotateY(-180deg);
+        transform: perspective(600px) rotateY(-180deg) translateZ(0px);
       }
     }
 
     .anim-color-rotate text {
-      animation: textCounterRotate 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      animation: textCounterRotate3D 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
-    @keyframes textCounterRotate {
+    @keyframes textCounterRotate3D {
       0% {
         transform: rotateY(0deg);
+      }
+      50% {
+        transform: rotateY(90deg);
       }
       100% {
         transform: rotateY(180deg);
@@ -116,7 +129,10 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-900 text-slate-100 selection:bg-amber-500 selection:text-slate-900">
+<body class="min-h-screen flex flex-col text-slate-100 selection:bg-amber-500 selection:text-slate-900 relative">
+
+  <!-- Flash Overlay for Win/Loss Effect over bg.jpg -->
+  <div id="flash-overlay" class="fixed inset-0 pointer-events-none transition-opacity duration-500 z-40 opacity-0"></div>
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast flex flex-col gap-2"></div>
@@ -572,13 +588,15 @@
 
           gAnim.appendChild(poly);
 
+          const baseFontSize = isRound3 ? 22 : 30;
+
           if (letter) {
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', '0');
-            text.setAttribute('y', '9');
+            text.setAttribute('y', '10');
             text.setAttribute('text-anchor', 'middle');
             text.setAttribute('fill', textColor);
-            text.setAttribute('font-size', '22');
+            text.setAttribute('font-size', baseFontSize.toString());
             text.setAttribute('font-weight', 'bold');
             text.setAttribute('font-family', 'Aptos, sans-serif');
             text.textContent = letter;
@@ -590,6 +608,20 @@
           index++;
         }
       }
+
+      // Auto font-size adjustment if text overflows hexagon width
+      svg.querySelectorAll('text').forEach(textNode => {
+        try {
+          const currentSize = parseFloat(textNode.getAttribute('font-size')) || (isRound3 ? 22 : 30);
+          const maxW = 66; // max inner width inside hexagon cell
+          const textW = textNode.getComputedTextLength();
+          if (textW > maxW && textW > 0) {
+            const newSize = Math.max(10, Math.floor(currentSize * (maxW / textW)));
+            textNode.setAttribute('font-size', newSize.toString());
+            textNode.setAttribute('y', Math.round(newSize * 0.33).toString());
+          }
+        } catch (err) {}
+      });
 
       prevCellColors = [...cellColors];
     }
@@ -608,22 +640,23 @@
 
     let flashTimer = null;
     function updateFlashEffect() {
+      const overlay = document.getElementById('flash-overlay');
       if (gameState && gameState.flashEffect && gameState.flashEffect.type) {
         const remaining = gameState.flashEffect.expireTime - Date.now();
         if (remaining > 0) {
-          if (gameState.flashEffect.type === 'green') {
-            document.body.style.background = '#059669';
-          } else if (gameState.flashEffect.type === 'red') {
-            document.body.style.background = '#dc2626';
+          if (overlay) {
+            overlay.className = `fixed inset-0 pointer-events-none transition-opacity duration-500 z-40 opacity-80 ${
+              gameState.flashEffect.type === 'green' ? 'bg-emerald-600' : 'bg-red-600'
+            }`;
           }
           if (flashTimer) clearTimeout(flashTimer);
           flashTimer = setTimeout(() => {
-            document.body.style.background = 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)';
+            if (overlay) overlay.className = 'fixed inset-0 pointer-events-none transition-opacity duration-500 z-40 opacity-0';
           }, remaining);
           return;
         }
       }
-      document.body.style.background = 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)';
+      if (overlay) overlay.className = 'fixed inset-0 pointer-events-none transition-opacity duration-500 z-40 opacity-0';
     }
 
     function updateUIState() {
