@@ -18,6 +18,92 @@
       overflow: hidden;
     }
 
+    .hex-cell {
+      transition: filter 0.2s ease, transform 0.2s ease;
+    }
+
+    /* Animation 1: Reveal Board Cells (Rotate Y counter-clockwise + scale up simultaneously) */
+    @keyframes revealBoardCell {
+      0% {
+        transform: rotateY(-360deg) scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: rotateY(0deg) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .cell-reveal {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: revealBoardCell 0.7s cubic-bezier(0.34, 1.25, 0.64, 1) forwards;
+    }
+
+    /* Animation 2: Selected cell blinking continuously between current color and black */
+    @keyframes blinkSelectedPolygon {
+      0%, 100% {
+        fill: var(--cell-color);
+      }
+      50% {
+        fill: #000000;
+      }
+    }
+
+    @keyframes blinkSelectedText {
+      0%, 100% {
+        fill: var(--text-color);
+      }
+      50% {
+        fill: #ffffff;
+      }
+    }
+
+    .cell-selected polygon {
+      animation: blinkSelectedPolygon 0.6s infinite ease-in-out !important;
+    }
+
+    .cell-selected text {
+      animation: blinkSelectedText 0.6s infinite ease-in-out !important;
+    }
+
+    /* Animation 3: Coloring a cell (rotates 180 degrees counter-clockwise) */
+    @keyframes flipColorCell {
+      0% {
+        transform: rotateY(0deg);
+      }
+      50% {
+        transform: rotateY(-90deg);
+      }
+      100% {
+        transform: rotateY(-180deg);
+      }
+    }
+
+    @keyframes flipColorText {
+      0% {
+        transform: rotateY(0deg);
+      }
+      50% {
+        transform: rotateY(-90deg);
+      }
+      100% {
+        transform: rotateY(-180deg) scaleX(-1);
+      }
+    }
+
+    .cell-flip-color {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: flipColorCell 0.6s ease-in-out forwards;
+    }
+
+    .cell-flip-color text {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: flipColorText 0.6s ease-in-out forwards;
+    }
+
     @font-face {
       font-family: 'Aptos';
       src: url('Aptos.ttf') format('truetype');
@@ -102,6 +188,10 @@
 
     const socket = io();
     let gameState = null;
+    let previousBoardVisible = false;
+    let previousCellColors = [];
+    let previousRound = null;
+    let isBoardJustShown = false;
 
     // Flat Hex Geometry (rotated 30 degrees)
     function getFlatHexPolygon(cx, cy, r) {
@@ -141,14 +231,20 @@
       const r = gameState.currentRound;
       const roundBoard = gameState.roundBoards[r];
 
-      if (!roundBoard || !roundBoard.visible) {
+      const isVisible = roundBoard ? roundBoard.visible : false;
+      if (!isVisible) {
         placeholder.classList.remove('hidden');
         boardContainer.classList.add('hidden');
+        previousBoardVisible = false;
         return;
       }
 
       placeholder.classList.add('hidden');
       boardContainer.classList.remove('hidden');
+
+      if (isVisible && (!previousBoardVisible || previousRound !== r || isBoardJustShown)) {
+        isBoardJustShown = true;
+      }
 
       const letters = roundBoard.letters || [];
       const cellColors = roundBoard.cellColors || [];
@@ -247,7 +343,27 @@
             }
           }
 
+          const isColorChanged = previousBoardVisible && (previousRound === r) && (!isBoardJustShown) &&
+                                 (previousCellColors[cellIdx] !== undefined) &&
+                                 (previousCellColors[cellIdx] !== colorState);
+
           const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          let classList = ['hex-cell'];
+
+          if (isBoardJustShown) {
+            classList.push('cell-reveal');
+            g.style.animationDelay = `${cellIdx * 30}ms`;
+          } else if (isColorChanged) {
+            classList.push('cell-flip-color');
+          }
+
+          if (isSelected) {
+            classList.push('cell-selected');
+            g.style.setProperty('--cell-color', fillColor);
+            g.style.setProperty('--text-color', textColor);
+          }
+
+          g.setAttribute('class', classList.join(' '));
 
           const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
           poly.setAttribute('points', pts);
@@ -273,6 +389,11 @@
           index++;
         }
       }
+
+      previousBoardVisible = isVisible;
+      previousCellColors = [...cellColors];
+      previousRound = r;
+      isBoardJustShown = false;
     }
 
     socket.on('connect', () => {
