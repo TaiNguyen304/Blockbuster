@@ -380,7 +380,7 @@
       svg.appendChild(defs);
 
       outerHexes.forEach(o => {
-        if (isRound3 && (o.row === -1 || o.row === 4)) {
+        if (isRound3 && o.col >= 0 && o.col <= 4 && (o.row === -1 || o.row === 4)) {
           return; // Skip top 5 and bottom 5 outer hexes in Round 3
         }
         let cx = startX + o.col * colStep;
