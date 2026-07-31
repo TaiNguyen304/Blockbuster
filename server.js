@@ -91,11 +91,11 @@ function resetTimer() {
 
 // Routes
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/controller', (req, res) => res.sendFile(path.join(__dirname, 'controller.html')));
-app.get('/viewer', (req, res) => res.sendFile(path.join(__dirname, 'viewer.html')));
-app.get('/host', (req, res) => res.sendFile(path.join(__dirname, 'host.html')));
-app.get('/player', (req, res) => res.sendFile(path.join(__dirname, 'player.html')));
-app.get('/couple', (req, res) => res.sendFile(path.join(__dirname, 'couple.html')));
+app.get(['/controller', '/Controller', '/Controller.html'], (req, res) => res.sendFile(path.join(__dirname, 'Controller.html')));
+app.get(['/viewer', '/Viewer', '/Viewer.html'], (req, res) => res.sendFile(path.join(__dirname, 'Viewer.html')));
+app.get(['/host', '/Host', '/Host.html'], (req, res) => res.sendFile(path.join(__dirname, 'Host.html')));
+app.get(['/player', '/Player', '/Player.html'], (req, res) => res.sendFile(path.join(__dirname, 'Player.html')));
+app.get(['/couple', '/Couple', '/Couple.html'], (req, res) => res.sendFile(path.join(__dirname, 'Couple.html')));
 
 // Socket.IO
 io.on('connection', (socket) => {
