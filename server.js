@@ -40,7 +40,8 @@ function createNewRoundState(letters, isRound3 = false) {
     visible: false,
     letters: [...letters],
     cellColors: Array(20).fill(isRound3 ? 'white' : 'yellow'),
-    selectedIndices: []
+    selectedIndices: [],
+    showAnimKey: 0
   };
 }
 
@@ -242,6 +243,7 @@ io.on('connection', (socket) => {
     room.roundBoards[r].visible = true;
     room.roundBoards[r].cellColors = Array(20).fill(r === 3 ? 'white' : 'yellow');
     room.roundBoards[r].selectedIndices = [];
+    room.roundBoards[r].showAnimKey = Date.now();
     io.to(joinedRoomId).emit('state:update', sanitizeRoomState(room));
   });
 
