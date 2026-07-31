@@ -273,6 +273,20 @@
         { col: 4, row: 4, type: 'white' }
       ];
 
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      defs.innerHTML = `
+        <pattern id="pat-blue" patternUnits="objectBoundingBox" width="1" height="1">
+          <image href="BBBlue.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
+        </pattern>
+        <pattern id="pat-gold" patternUnits="objectBoundingBox" width="1" height="1">
+          <image href="BBGold.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
+        </pattern>
+        <pattern id="pat-white" patternUnits="objectBoundingBox" width="1" height="1">
+          <image href="BBWhite.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
+        </pattern>
+      `;
+      svg.appendChild(defs);
+
       outerHexes.forEach(o => {
         let cx = startX + o.col * colStep;
         let cy = startY + o.row * rowStep + (Math.abs(o.col) % 2 === 1 ? rowStep * 0.5 : 0);
@@ -282,11 +296,11 @@
 
         const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         poly.setAttribute('points', localPts);
-        const outerFill = isRound3 ? '#FFC700' : (o.type === 'blue' ? '#0284C7' : '#F1F5F9');
+        const outerFill = isRound3 ? 'url(#pat-gold)' : (o.type === 'blue' ? 'url(#pat-blue)' : 'url(#pat-white)');
         poly.setAttribute('fill', outerFill);
         poly.setAttribute('stroke', '#0F172A');
         poly.setAttribute('stroke-width', '4');
-        poly.setAttribute('opacity', '0.9');
+        poly.setAttribute('opacity', '0.85');
         gOuter.appendChild(poly);
 
         svg.appendChild(gOuter);
@@ -304,7 +318,7 @@
           const colorState = cellColors[cellIdx] || (isRound3 ? 'white' : 'yellow');
           const isSelected = selectedIndices.includes(cellIdx);
 
-          let fillColor = '#FFC700';
+          let fillColor = 'url(#pat-gold)';
           let textColor = '#0F172A';
 
           if (isRound3) {
@@ -312,21 +326,21 @@
               fillColor = '#0F172A';
               textColor = '#FFFFFF';
             } else if (colorState === 'yellow' || colorState === 'blue') {
-              fillColor = '#FFC700';
+              fillColor = 'url(#pat-gold)';
               textColor = '#0F172A';
             } else {
-              fillColor = '#FFFFFF';
+              fillColor = 'url(#pat-white)';
               textColor = '#0F172A';
             }
           } else {
             if (colorState === 'blue') {
-              fillColor = '#2563EB';
+              fillColor = 'url(#pat-blue)';
               textColor = '#FFFFFF';
             } else if (colorState === 'white') {
-              fillColor = '#FFFFFF';
+              fillColor = 'url(#pat-white)';
               textColor = '#000000';
             } else {
-              fillColor = '#FFC700';
+              fillColor = 'url(#pat-gold)';
               textColor = '#0F172A';
             }
           }
@@ -351,8 +365,8 @@
           const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
           poly.setAttribute('points', localPts);
           poly.setAttribute('fill', fillColor);
-          poly.setAttribute('stroke', isSelected ? '#FFFFFF' : '#0F172A');
-          poly.setAttribute('stroke-width', '4');
+          poly.setAttribute('stroke', '#0F172A');
+          poly.setAttribute('stroke-width', '3.5');
 
           if (isSelected) {
             poly.style.setProperty('--cell-current-color', baseColor);
