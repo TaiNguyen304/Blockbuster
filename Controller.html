@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
   <style>
     * {
       font-weight: bold !important;
@@ -57,27 +57,32 @@
   <!-- Top Navigation Header -->
   <header class="bg-slate-800/90 border-b border-slate-700/80 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xl backdrop-blur-md">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20 border-2 border-amber-300">
         B
       </div>
       <div>
         <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
           CONTROLLER <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">BLOCKBUSTER</span>
         </h1>
-        <p class="text-xs text-slate-400 font-medium">Màn hình điều khiển Game Show trung tâm</p>
+        <p class="text-xs text-slate-400 font-bold">Màn hình điều khiển Game Show trung tâm</p>
       </div>
     </div>
 
-    <!-- Excel Upload & Viewer Link Buttons -->
-    <div class="flex items-center gap-3">
+    <!-- Excel Upload & Quick Links -->
+    <div class="flex flex-wrap items-center gap-3">
       <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden">
       <button id="btnUploadExcel" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-orange-500 hover:to-orange-500 hover:text-white text-white font-bold text-sm shadow-lg border border-emerald-400/30 flex items-center gap-2 transition active:scale-95">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         <span>Nhập đề từ Excel</span>
       </button>
 
-      <a href="/Viewer.html" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-orange-500 hover:text-white text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
+      <a id="btnOpenViewer" href="/Viewer.html" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-orange-500 hover:text-white text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
         <span>Mở Viewer</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+      </a>
+
+      <a id="btnOpenHost" href="/Host.html" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-orange-500 hover:text-white text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
+        <span>Mở Host</span>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
       </a>
     </div>
@@ -105,6 +110,48 @@
           <span id="statusTimer" class="text-amber-400 font-extrabold">60s</span>
         </div>
       </div>
+    </div>
+
+    <!-- MỤC TẠO MÃ PHÒNG VÀ MẬT KHẨU (ROOM CODE & PASSWORD CREATION SECTION) -->
+    <div class="bg-slate-800/80 border-2 border-amber-500/30 rounded-2xl p-5 flex flex-col gap-4 shadow-xl relative overflow-hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-base font-black text-white uppercase tracking-wider">TẠO MÃ PHÒNG & MẬT KHẨU</h2>
+            <p class="text-xs text-slate-400 font-bold">Quản lý mã kết nối Game Show cho các thiết bị</p>
+          </div>
+        </div>
+
+        <button id="btnGenerateCredentials" class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-orange-500 hover:to-orange-500 hover:text-white text-slate-950 font-black text-sm shadow-md border border-amber-300 transition active:scale-95 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>TẠO MÃ PHÒNG MỚI</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Mã Phòng (6 chữ số) -->
+        <div class="bg-slate-900/90 border border-slate-700 p-4 rounded-xl flex flex-col gap-1">
+          <span class="text-xs text-slate-400 uppercase font-black">1. Mã phòng (6 chữ số)</span>
+          <span id="displayRoomId" class="text-2xl font-black text-amber-400 tracking-widest">------</span>
+        </div>
+
+        <!-- Mật khẩu Player -->
+        <div class="bg-slate-900/90 border border-slate-700 p-4 rounded-xl flex flex-col gap-1">
+          <span class="text-xs text-purple-400 uppercase font-black">2. Mật khẩu Player</span>
+          <span id="displayPlayerPass" class="text-2xl font-black text-white tracking-widest">----</span>
+        </div>
+
+        <!-- Mật khẩu Couple -->
+        <div class="bg-slate-900/90 border border-slate-700 p-4 rounded-xl flex flex-col gap-1">
+          <span class="text-xs text-blue-400 uppercase font-black">3. Mật khẩu Couple</span>
+          <span id="displayCouplePass" class="text-2xl font-black text-white tracking-widest">----</span>
+        </div>
+      </div>
+
+      <!-- End Room Credentials Section -->
     </div>
 
     <!-- Main Board & Control Panel Split -->
@@ -262,17 +309,10 @@
     }
     disableDevTools();
 
-    const ONDER_URL = "https://blockbuster-1i37.onrender.com";
-    let socket;
-    try {
-      socket = io(window.location.origin.includes("onrender.com") ? window.location.origin : (window.location.origin || ONDER_URL));
-    } catch(e) {
-      socket = io();
-    }
-
+    const socket = io();
     let gameState = null;
 
-    // Toast Notification
+    // Toast Notification (No alert/confirm used)
     function showToast(msg, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -352,7 +392,6 @@
 
         const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         poly.setAttribute('points', pts);
-        // In Round 3, outer decorative hexes are ALL YELLOW (#FFC700)
         const outerFill = isRound3 ? '#FFC700' : (o.type === 'blue' ? '#0284C7' : '#F1F5F9');
         poly.setAttribute('fill', outerFill);
         poly.setAttribute('stroke', '#0F172A');
@@ -379,31 +418,30 @@
 
           if (isRound3) {
             if (isSelected) {
-              fillColor = '#F97316'; // Orange when selected
+              fillColor = '#F97316';
               textColor = '#FFFFFF';
             } else if (colorState === 'black') {
-              fillColor = '#0F172A'; // Black
+              fillColor = '#0F172A';
               textColor = '#FFFFFF';
             } else if (colorState === 'yellow' || colorState === 'blue') {
-              fillColor = '#FFC700'; // Yellow when colored in Round 3
+              fillColor = '#FFC700';
               textColor = '#0F172A';
             } else {
-              fillColor = '#FFFFFF'; // Default White in Round 3
+              fillColor = '#FFFFFF';
               textColor = '#0F172A';
             }
           } else {
-            // Round 1 & 2
             if (isSelected) {
-              fillColor = '#F97316'; // Orange when selected
+              fillColor = '#F97316';
               textColor = '#FFFFFF';
             } else if (colorState === 'blue') {
-              fillColor = '#2563EB'; // Blue
+              fillColor = '#2563EB';
               textColor = '#FFFFFF';
             } else if (colorState === 'white') {
-              fillColor = '#FFFFFF'; // White
+              fillColor = '#FFFFFF';
               textColor = '#000000';
             } else {
-              fillColor = '#FFC700'; // Default Yellow
+              fillColor = '#FFC700';
               textColor = '#0F172A';
             }
           }
@@ -446,7 +484,6 @@
       });
     }
 
-    // Switch Round tabs
     function switchRound(round) {
       socket.emit('round:switch', round);
     }
@@ -454,6 +491,22 @@
     function updateUIState() {
       if (!gameState) return;
       const r = gameState.currentRound;
+
+      // Update Room Credentials Display
+      if (gameState.credentials) {
+        const { roomId, playerPassword, couplePassword } = gameState.credentials;
+        document.getElementById('displayRoomId').textContent = roomId || '------';
+        document.getElementById('displayPlayerPass').textContent = playerPassword || '----';
+        document.getElementById('displayCouplePass').textContent = couplePassword || '----';
+
+        document.getElementById('btnOpenViewer').href = `/Viewer.html?roomid=${roomId}`;
+        document.getElementById('btnOpenHost').href = `/Host.html?roomid=${roomId}`;
+
+        if (roomId && window.history && window.history.replaceState) {
+          currentRoomId = roomId;
+          window.history.replaceState({}, '', `/Controller.html?roomid=${roomId}`);
+        }
+      }
 
       // Update Active Round Label
       const roundNames = { 1: 'VÒNG 1', 2: 'VÒNG 2', 3: 'VÒNG ĐẶC BIỆT' };
@@ -485,7 +538,7 @@
         badge.className = 'text-xs px-2.5 py-1 rounded-md font-bold bg-slate-700 text-slate-300';
       }
 
-      // Show/Hide Buzzer vs Timer panels & Color Groups
+      // Show/Hide Panels
       const buzzerPanel = document.getElementById('panelBuzzerControls');
       const timerPanel = document.getElementById('panelTimerControls');
       const round12ColorGroup = document.getElementById('round12ColorGroup');
@@ -536,6 +589,12 @@
 
       renderBoard();
     }
+
+    // Generate Room Credentials Event
+    document.getElementById('btnGenerateCredentials').onclick = () => {
+      socket.emit('credentials:generate');
+      showToast('🔑 Đã tạo Mã phòng và Mật khẩu mới thành công!', 'success');
+    };
 
     // Socket Event Listeners
     socket.on('state:update', (data) => {
@@ -669,8 +728,25 @@
       reader.readAsArrayBuffer(file);
     };
 
-    // Initial load
-    socket.emit('get:state');
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentRoomId = urlParams.get('roomid');
+
+    socket.on('connect', () => {
+      if (currentRoomId) {
+        socket.emit('join:room', { roomId: currentRoomId });
+      } else {
+        socket.emit('get:state');
+      }
+    });
+
+    // Initial load fallback
+    if (socket.connected) {
+      if (currentRoomId) {
+        socket.emit('join:room', { roomId: currentRoomId });
+      } else {
+        socket.emit('get:state');
+      }
+    }
   </script>
 </body>
 </html>

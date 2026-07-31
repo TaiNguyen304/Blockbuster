@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng Nhập - Blockbuster Game Show</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-weight: bold !important;
+    }
+    body {
+      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 select-none">
+
+  <!-- Login Card Container -->
+  <div class="w-full max-w-md bg-slate-800/90 border-2 border-slate-700/80 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl flex flex-col gap-6">
+
+    <!-- Header Logo & Title -->
+    <div class="flex flex-col items-center text-center gap-3">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-3xl shadow-xl shadow-amber-500/20 border-2 border-amber-300">
+        B
+      </div>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-black text-white tracking-wider">BLOCKBUSTER</h1>
+        <p class="text-xs text-amber-400 font-extrabold tracking-wide uppercase mt-1">Trang Đăng Nhập Người Chơi</p>
+      </div>
+    </div>
+
+    <!-- Error Notification Box -->
+    <div id="errorBanner" class="hidden bg-rose-500/20 border-2 border-rose-500/50 rounded-2xl p-4 text-rose-300 text-sm font-extrabold flex items-center gap-3">
+      <svg class="w-6 h-6 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <span id="errorMessage">Mã phòng hoặc mật khẩu không chính xác!</span>
+    </div>
+
+    <!-- Form Container (3 inputs) -->
+    <form id="loginForm" class="flex flex-col gap-5">
+
+      <!-- Ô 1: Chọn Vai Trò (Role) -->
+      <div class="flex flex-col gap-2">
+        <label class="text-xs text-slate-300 font-black uppercase tracking-wider flex items-center gap-1.5">
+          <span>Ô 1: CHỌN VAI TRÒ</span>
+        </label>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="cursor-pointer">
+            <input type="radio" name="role" value="player" checked class="peer hidden">
+            <div class="py-3 px-4 rounded-xl bg-slate-900 border-2 border-slate-700 text-slate-300 font-black text-sm text-center transition peer-checked:bg-amber-500 peer-checked:border-amber-400 peer-checked:text-slate-950 shadow-md">
+              PLAYER
+            </div>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="role" value="couple" class="peer hidden">
+            <div class="py-3 px-4 rounded-xl bg-slate-900 border-2 border-slate-700 text-slate-300 font-black text-sm text-center transition peer-checked:bg-amber-500 peer-checked:border-amber-400 peer-checked:text-slate-950 shadow-md">
+              COUPLE
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Ô 2: Nhập Mã Phòng (Room ID) -->
+      <div class="flex flex-col gap-2">
+        <label for="roomIdInput" class="text-xs text-slate-300 font-black uppercase tracking-wider">
+          Ô 2: NHẬP MÃ PHÒNG
+        </label>
+        <div class="relative">
+          <input type="text" id="roomIdInput" maxlength="6" pattern="[0-9]*" placeholder="Nhập 6 chữ số mã phòng" required
+            class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3.5 text-white font-black text-base placeholder-slate-500 focus:outline-none focus:border-amber-500 transition tracking-widest text-center">
+        </div>
+      </div>
+
+      <!-- Ô 3: Nhập Mật Khẩu (Password) -->
+      <div class="flex flex-col gap-2">
+        <label for="passwordInput" class="text-xs text-slate-300 font-black uppercase tracking-wider">
+          Ô 3: NHẬP MẬT KHẨU
+        </label>
+        <div class="relative">
+          <input type="password" id="passwordInput" placeholder="Nhập mật khẩu" required
+            class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3.5 text-white font-black text-base placeholder-slate-500 focus:outline-none focus:border-amber-500 transition tracking-wider text-center">
+        </div>
+      </div>
+
+      <!-- Nút Đăng Nhập -->
+      <button type="submit" id="btnLogin"
+        class="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-orange-500 hover:to-orange-500 hover:text-white text-slate-950 font-black text-base shadow-xl border-2 border-amber-300 transition active:scale-95 flex items-center justify-center gap-2 mt-2">
+        <span>ĐĂNG NHẬP NGAY</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </button>
+
+    </form>
+
+
+
+  </div>
+
+  <script>
+    // Check URL parameters for error messages if redirected back
+    const urlParams = new URLSearchParams(window.location.search);
+    const reason = urlParams.get('reason');
+    const errorBanner = document.getElementById('errorBanner');
+    const errorMessage = document.getElementById('errorMessage');
+
+    if (reason === 'missing') {
+      errorMessage.textContent = 'Thiếu tham số phòng hoặc mật khẩu. Vui lòng đăng nhập!';
+      errorBanner.classList.remove('hidden');
+    } else if (reason === 'invalid') {
+      errorMessage.textContent = 'Mã phòng hoặc mật khẩu đã bị đổi hoặc không chính xác!';
+      errorBanner.classList.remove('hidden');
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    loginForm.onsubmit = async (e) => {
+      e.preventDefault();
+      errorBanner.classList.add('hidden');
+
+      const roleInput = document.querySelector('input[name="role"]:checked');
+      const role = roleInput ? roleInput.value : 'player';
+      const roomId = document.getElementById('roomIdInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+
+      if (!roomId || !password) {
+        errorMessage.textContent = 'Vui lòng nhập đầy đủ Mã phòng và Mật khẩu!';
+        errorBanner.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/verify-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role, roomId, password })
+        });
+
+        const data = await response.json();
+        if (data.success && data.redirectUrl) {
+          window.location.href = data.redirectUrl;
+        } else {
+          errorMessage.textContent = data.message || 'Mã phòng hoặc mật khẩu không chính xác!';
+          errorBanner.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error(err);
+        errorMessage.textContent = 'Không thể kết nối đến máy chủ. Vui lòng thử lại!';
+        errorBanner.classList.remove('hidden');
+      }
+    };
+  </script>
+</body>
+</html>

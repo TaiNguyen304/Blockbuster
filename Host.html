@@ -22,79 +22,104 @@
       font-family: 'Aptos';
       src: url('Aptos.ttf') format('truetype');
       font-weight: bold;
-      /* Hoặc 700 */
       font-style: normal;
     }
   </style>
 </head>
 <body class="min-h-screen flex flex-col md:flex-row w-full select-none overflow-hidden">
 
-  <!-- 80% Left Screen: Viewer Board Layout -->
-  <div class="w-full md:w-[80%] min-h-screen p-4 md:p-6 flex flex-col justify-between items-center border-r-4 border-slate-700/80">
-    
-    <!-- Header Banner -->
-    <header class="w-full max-w-5xl flex items-center justify-between bg-slate-800/80 border-2 border-slate-700/80 rounded-2xl px-6 py-4 shadow-2xl backdrop-blur-md">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30">
-          B
-        </div>
-        <div>
-          <h1 class="text-2xl md:text-3xl font-black text-white tracking-wider flex items-center gap-3">
-            MÀN HÌNH MC <span id="roundHeader" class="text-amber-400 bg-amber-500/20 px-3 py-1 rounded-xl border-2 border-amber-500/40 text-lg md:text-xl">VÒNG 1</span>
-          </h1>
-        </div>
+  <!-- Missing/Invalid Room ID Full Screen Error Modal -->
+  <div id="roomErrorScreen" class="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-6 text-center">
+    <div class="max-w-md w-full bg-slate-800 border-2 border-rose-500/50 rounded-3xl p-8 shadow-2xl flex flex-col items-center gap-4">
+      <div class="w-16 h-16 rounded-full bg-rose-500/20 border-2 border-rose-500/40 flex items-center justify-center text-rose-400">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
       </div>
-
-      <div class="flex items-center gap-2 bg-slate-900/90 border-2 border-slate-700 px-4 py-2 rounded-xl text-amber-400 text-sm font-black">
-        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span>TRỰC TIẾP</span>
+      <h2 id="roomErrorTitle" class="text-2xl font-black text-rose-400">THÔNG BÁO MÃ PHÒNG</h2>
+      <p id="roomErrorMessage" class="text-base font-extrabold text-slate-200">
+        Vui lòng nhập tham số ?roomid trên URL.
+      </p>
+      <div class="text-xs text-slate-400 font-bold bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700 w-full">
+        Ví dụ: Host.html?roomid=123456
       </div>
-    </header>
-
-    <!-- Main Board Canvas Center -->
-    <main class="w-full max-w-5xl flex-1 flex flex-col items-center justify-center my-4 relative">
-      
-      <!-- Waiting placeholder when board is hidden -->
-      <div id="hiddenPlaceholder" class="flex flex-col items-center justify-center gap-4 p-12 bg-slate-800/40 border-4 border-dashed border-slate-700 rounded-3xl backdrop-blur-sm max-w-lg w-full text-center">
-        <div class="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 animate-pulse">
-          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-        </div>
-        <h2 class="text-2xl font-black text-slate-300">ĐANG CHỜ HIỆN BẢNG</h2>
-        <p class="text-sm font-bold text-slate-400">Tín hiệu bảng sẽ đồng bộ trực tiếp từ Controller...</p>
-      </div>
-
-      <!-- Active Hex Board SVG -->
-      <div id="boardContainer" class="w-full flex justify-center items-center hidden">
-        <svg id="hostHexBoard" viewBox="0 0 650 500" class="w-full max-w-[650px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-          <!-- Rendered by JS -->
-        </svg>
-      </div>
-
-    </main>
-
+    </div>
   </div>
 
-  <!-- 20% Right Screen: 3 Vertical Boxes -->
-  <div class="w-full md:w-[20%] min-h-screen bg-slate-900/90 p-4 md:p-6 flex flex-col justify-start items-center shadow-2xl gap-6">
-    
-    <div class="w-full flex flex-col gap-4 mt-6">
-      <!-- Box 1: PLAYER -->
-      <div id="boxPlayer" class="w-full h-28 md:h-32 rounded-2xl bg-purple-600 border-4 border-purple-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
-        <span class="text-xl md:text-2xl font-black tracking-widest">PLAYER</span>
-        <span id="playerStatusText" class="text-xs font-extrabold mt-1 opacity-80">CHỜ CHUÔNG</span>
+  <!-- Main Host Layout (Hidden when roomid is invalid) -->
+  <div id="mainHostContent" class="w-full min-h-screen flex flex-col md:flex-row w-full hidden">
+
+    <!-- 80% Left Screen: Viewer Board Layout -->
+    <div class="w-full md:w-[80%] min-h-screen p-4 md:p-6 flex flex-col justify-between items-center border-r-4 border-slate-700/80">
+      
+      <!-- Header Banner -->
+      <header class="w-full max-w-5xl flex items-center justify-between bg-slate-800/80 border-2 border-slate-700/80 rounded-2xl px-6 py-4 shadow-2xl backdrop-blur-md">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30 border-2 border-amber-300">
+            B
+          </div>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-black text-white tracking-wider flex items-center gap-3">
+              MÀN HÌNH MC <span id="roundHeader" class="text-amber-400 bg-amber-500/20 px-3 py-1 rounded-xl border-2 border-amber-500/40 text-lg md:text-xl">VÒNG 1</span>
+            </h1>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="bg-slate-900/90 border-2 border-slate-700 px-3 py-1.5 rounded-xl text-xs font-black text-slate-300">
+            PHÒNG: <span id="currentRoomDisplay" class="text-amber-400 font-extrabold">------</span>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-900/90 border-2 border-slate-700 px-4 py-1.5 rounded-xl text-amber-400 text-sm font-black">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>TRỰC TIẾP</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Board Canvas Center -->
+      <main class="w-full max-w-5xl flex-1 flex flex-col items-center justify-center my-4 relative">
+        
+        <!-- Waiting placeholder when board is hidden -->
+        <div id="hiddenPlaceholder" class="flex flex-col items-center justify-center gap-4 p-12 bg-slate-800/40 border-4 border-dashed border-slate-700 rounded-3xl backdrop-blur-sm max-w-lg w-full text-center">
+          <div class="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 animate-pulse">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+          </div>
+          <h2 class="text-2xl font-black text-slate-300">ĐANG CHỜ HIỆN BẢNG</h2>
+          <p class="text-sm font-bold text-slate-400">Tín hiệu bảng sẽ đồng bộ trực tiếp từ Controller...</p>
+        </div>
+
+        <!-- Active Hex Board SVG -->
+        <div id="boardContainer" class="w-full flex justify-center items-center hidden">
+          <svg id="hostHexBoard" viewBox="0 0 650 500" class="w-full max-w-[650px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+            <!-- Rendered by JS -->
+          </svg>
+        </div>
+
+      </main>
+
+    </div>
+
+    <!-- 20% Right Screen: 3 Vertical Boxes -->
+    <div class="w-full md:w-[20%] min-h-screen bg-slate-900/90 p-4 md:p-6 flex flex-col justify-start items-center shadow-2xl gap-6">
+      
+      <div class="w-full flex flex-col gap-4 mt-6">
+        <!-- Box 1: PLAYER -->
+        <div id="boxPlayer" class="w-full h-28 md:h-32 rounded-2xl bg-purple-600 border-4 border-purple-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
+          <span class="text-xl md:text-2xl font-black tracking-widest">PLAYER</span>
+          <span id="playerStatusText" class="text-xs font-extrabold mt-1 opacity-80">CHỜ CHUÔNG</span>
+        </div>
+
+        <!-- Box 2: COUPLE -->
+        <div id="boxCouple" class="w-full h-28 md:h-32 rounded-2xl bg-purple-600 border-4 border-purple-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
+          <span class="text-xl md:text-2xl font-black tracking-widest">COUPLE</span>
+          <span id="coupleStatusText" class="text-xs font-extrabold mt-1 opacity-80">CHỜ CHUÔNG</span>
+        </div>
+
+        <!-- Box 3: CLOCK / TIMER -->
+        <div id="boxClock" class="w-full h-28 md:h-32 rounded-2xl bg-red-600 border-4 border-red-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
+          <span class="text-xs font-black tracking-widest uppercase opacity-90">ĐỒNG HỒ</span>
+          <span id="hostTimerDisplay" class="text-3xl md:text-4xl font-black tracking-wider text-white">60s</span>
+        </div>
       </div>
 
-      <!-- Box 2: COUPLE -->
-      <div id="boxCouple" class="w-full h-28 md:h-32 rounded-2xl bg-purple-600 border-4 border-purple-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
-        <span class="text-xl md:text-2xl font-black tracking-widest">COUPLE</span>
-        <span id="coupleStatusText" class="text-xs font-extrabold mt-1 opacity-80">CHỜ CHUÔNG</span>
-      </div>
-
-      <!-- Box 3: CLOCK / TIMER -->
-      <div id="boxClock" class="w-full h-28 md:h-32 rounded-2xl bg-red-600 border-4 border-red-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
-        <span class="text-xs font-black tracking-widest uppercase opacity-90">ĐỒNG HỒ</span>
-        <span id="hostTimerDisplay" class="text-3xl md:text-4xl font-black tracking-wider text-white">60s</span>
-      </div>
     </div>
 
   </div>
@@ -117,14 +142,25 @@
     }
     disableDevTools();
 
-    const ONDER_URL = "https://blockbuster-1i37.onrender.com";
-    let socket;
-    try {
-      socket = io(window.location.origin.includes("onrender.com") ? window.location.origin : (window.location.origin || ONDER_URL));
-    } catch(e) {
-      socket = io();
+    // Validate URL parameter ?roomid
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomIdParam = urlParams.get('roomid');
+
+    const roomErrorScreen = document.getElementById('roomErrorScreen');
+    const roomErrorMessage = document.getElementById('roomErrorMessage');
+    const mainHostContent = document.getElementById('mainHostContent');
+
+    if (!roomIdParam || !roomIdParam.trim()) {
+      roomErrorMessage.textContent = "Vui lòng nhập tham số ?roomid trên URL.";
+      roomErrorScreen.classList.remove('hidden');
+      mainHostContent.classList.add('hidden');
+    } else {
+      roomErrorScreen.classList.add('hidden');
+      mainHostContent.classList.remove('hidden');
+      document.getElementById('currentRoomDisplay').textContent = roomIdParam.trim();
     }
 
+    const socket = io();
     let gameState = null;
 
     // Flat Hex Geometry (rotated 30 degrees)
@@ -140,12 +176,27 @@
     }
 
     function renderBoard() {
+      if (!roomIdParam || !roomIdParam.trim()) return;
+
       const svg = document.getElementById('hostHexBoard');
       const placeholder = document.getElementById('hiddenPlaceholder');
       const boardContainer = document.getElementById('boardContainer');
       svg.innerHTML = '';
 
       if (!gameState) return;
+
+      // Check room ID validity against server state
+      if (gameState.credentials && gameState.credentials.roomId) {
+        if (roomIdParam.trim() !== gameState.credentials.roomId.trim()) {
+          roomErrorMessage.textContent = `Mã phòng "${roomIdParam}" không chính xác. Mã phòng hiện tại: ${gameState.credentials.roomId}`;
+          roomErrorScreen.classList.remove('hidden');
+          mainHostContent.classList.add('hidden');
+          return;
+        } else {
+          roomErrorScreen.classList.add('hidden');
+          mainHostContent.classList.remove('hidden');
+        }
+      }
 
       const r = gameState.currentRound;
       const roundBoard = gameState.roundBoards[r];
@@ -198,7 +249,7 @@
 
       const isRound3 = (r === 3);
 
-      // Outer Decorative Blue & White Hexes (5 left, 5 right, 5 top, 5 bottom)
+      // Outer Decorative Blue & White Hexes
       const outerHexes = [
         { col: -1, row: -1, type: 'blue' },
         { col: -1, row: 0, type: 'blue' },
@@ -229,7 +280,6 @@
 
         const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         poly.setAttribute('points', pts);
-        // In Round 3, outer decorative hexes are ALL YELLOW (#FFC700)
         const outerFill = isRound3 ? '#FFC700' : (o.type === 'blue' ? '#0284C7' : '#F1F5F9');
         poly.setAttribute('fill', outerFill);
         poly.setAttribute('stroke', '#0F172A');
@@ -238,7 +288,7 @@
         svg.appendChild(poly);
       });
 
-      // 20 Center Playable Hexes (5 cols x 4 rows)
+      // 20 Center Playable Hexes
       let index = 0;
       for (let col = 0; col < 5; col++) {
         for (let row = 0; row < 4; row++) {
@@ -256,31 +306,30 @@
 
           if (isRound3) {
             if (isSelected) {
-              fillColor = '#F97316'; // Orange when selected
+              fillColor = '#F97316';
               textColor = '#FFFFFF';
             } else if (colorState === 'black') {
-              fillColor = '#0F172A'; // Black
+              fillColor = '#0F172A';
               textColor = '#FFFFFF';
             } else if (colorState === 'yellow' || colorState === 'blue') {
-              fillColor = '#FFC700'; // Yellow when colored in Round 3
+              fillColor = '#FFC700';
               textColor = '#0F172A';
             } else {
-              fillColor = '#FFFFFF'; // Default White in Round 3
+              fillColor = '#FFFFFF';
               textColor = '#0F172A';
             }
           } else {
-            // Round 1 & 2
             if (isSelected) {
-              fillColor = '#F97316'; // Orange when selected
+              fillColor = '#F97316';
               textColor = '#FFFFFF';
             } else if (colorState === 'blue') {
-              fillColor = '#2563EB'; // Blue
+              fillColor = '#2563EB';
               textColor = '#FFFFFF';
             } else if (colorState === 'white') {
-              fillColor = '#FFFFFF'; // White
+              fillColor = '#FFFFFF';
               textColor = '#000000';
             } else {
-              fillColor = '#FFC700'; // Default Yellow
+              fillColor = '#FFC700';
               textColor = '#0F172A';
             }
           }
@@ -313,6 +362,12 @@
       }
     }
 
+    socket.on('connect', () => {
+      if (roomIdParam && roomIdParam.trim()) {
+        socket.emit('join:room', { roomId: roomIdParam.trim() });
+      }
+    });
+
     socket.on('state:update', (data) => {
       gameState = data;
       renderBoard();
@@ -322,7 +377,9 @@
       document.getElementById('hostTimerDisplay').textContent = `${seconds}s`;
     });
 
-    socket.emit('get:state');
+    if (roomIdParam && roomIdParam.trim()) {
+      socket.emit('join:room', { roomId: roomIdParam.trim() });
+    }
   </script>
 </body>
 </html>

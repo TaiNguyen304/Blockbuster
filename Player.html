@@ -41,7 +41,6 @@
       font-family: 'Aptos';
       src: url('Aptos.ttf') format('truetype');
       font-weight: bold;
-      /* Hoặc 700 */
       font-style: normal;
     }
   </style>
@@ -54,7 +53,7 @@
     <!-- Header Banner -->
     <header class="w-full max-w-5xl flex items-center justify-between bg-slate-800/80 border-2 border-slate-700/80 rounded-2xl px-6 py-4 shadow-2xl backdrop-blur-md">
       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30 border-2 border-amber-300">
           B
         </div>
         <div>
@@ -64,9 +63,14 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 bg-slate-900/90 border-2 border-slate-700 px-4 py-2 rounded-xl text-amber-400 text-sm font-black">
-        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span>TRỰC TIẾP</span>
+      <div class="flex items-center gap-3">
+        <div class="bg-slate-900/90 border-2 border-slate-700 px-3 py-1.5 rounded-xl text-xs font-black text-slate-300">
+          PHÒNG: <span id="displayRoomId" class="text-amber-400 font-extrabold">------</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/90 border-2 border-slate-700 px-4 py-1.5 rounded-xl text-amber-400 text-sm font-black">
+          <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>TRỰC TIẾP</span>
+        </div>
       </div>
     </header>
 
@@ -145,14 +149,19 @@
     }
     disableDevTools();
 
-    const ONDER_URL = "https://blockbuster-1i37.onrender.com";
-    let socket;
-    try {
-      socket = io(window.location.origin.includes("onrender.com") ? window.location.origin : (window.location.origin || ONDER_URL));
-    } catch(e) {
-      socket = io();
+    // Check URL parameters ?roomid and ?auth
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomIdParam = urlParams.get('roomid');
+    const authParam = urlParams.get('auth');
+
+    // If missing parameters -> Redirect to login page immediately
+    if (!roomIdParam || !authParam) {
+      window.location.href = '/index.html?reason=missing';
+    } else {
+      document.getElementById('displayRoomId').textContent = roomIdParam.trim();
     }
 
+    const socket = io();
     let gameState = null;
 
     // Flat Hex Geometry (rotated 30 degrees)
@@ -174,6 +183,15 @@
       svg.innerHTML = '';
 
       if (!gameState) return;
+
+      // Validate credentials against server state
+      if (gameState.credentials) {
+        const { roomId, playerPassword } = gameState.credentials;
+        if (roomIdParam.trim() !== String(roomId).trim() || authParam.trim() !== String(playerPassword).trim()) {
+          window.location.href = '/index.html?reason=invalid';
+          return;
+        }
+      }
 
       const r = gameState.currentRound;
       const roundBoard = gameState.roundBoards[r];
@@ -205,7 +223,7 @@
         coupleStatusText.textContent = 'CHỜ CHUÔNG';
       }
 
-      // Update Buzzer Button State (Green when open, Orange on hover)
+      // Update Buzzer Button State
       const btnBuzzer = document.getElementById('btnPlayerBuzzer');
       const buzzerBtnText = document.getElementById('buzzerBtnText');
 
@@ -240,7 +258,7 @@
 
       const isRound3 = (r === 3);
 
-      // Outer Decorative Blue & White Hexes (5 left, 5 right, 5 top, 5 bottom)
+      // Outer Decorative Blue & White Hexes
       const outerHexes = [
         { col: -1, row: -1, type: 'blue' },
         { col: -1, row: 0, type: 'blue' },
@@ -271,7 +289,6 @@
 
         const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         poly.setAttribute('points', pts);
-        // In Round 3, outer decorative hexes are ALL YELLOW (#FFC700)
         const outerFill = isRound3 ? '#FFC700' : (o.type === 'blue' ? '#0284C7' : '#F1F5F9');
         poly.setAttribute('fill', outerFill);
         poly.setAttribute('stroke', '#0F172A');
@@ -280,7 +297,7 @@
         svg.appendChild(poly);
       });
 
-      // 20 Center Playable Hexes (5 cols x 4 rows)
+      // 20 Center Playable Hexes
       let index = 0;
       for (let col = 0; col < 5; col++) {
         for (let row = 0; row < 4; row++) {
@@ -298,31 +315,30 @@
 
           if (isRound3) {
             if (isSelected) {
-              fillColor = '#F97316'; // Orange when selected
+              fillColor = '#F97316';
               textColor = '#FFFFFF';
             } else if (colorState === 'black') {
-              fillColor = '#0F172A'; // Black
+              fillColor = '#0F172A';
               textColor = '#FFFFFF';
             } else if (colorState === 'yellow' || colorState === 'blue') {
-              fillColor = '#FFC700'; // Yellow when colored in Round 3
+              fillColor = '#FFC700';
               textColor = '#0F172A';
             } else {
-              fillColor = '#FFFFFF'; // Default White in Round 3
+              fillColor = '#FFFFFF';
               textColor = '#0F172A';
             }
           } else {
-            // Round 1 & 2
             if (isSelected) {
-              fillColor = '#F97316'; // Orange when selected
+              fillColor = '#F97316';
               textColor = '#FFFFFF';
             } else if (colorState === 'blue') {
-              fillColor = '#2563EB'; // Blue
+              fillColor = '#2563EB';
               textColor = '#FFFFFF';
             } else if (colorState === 'white') {
-              fillColor = '#FFFFFF'; // White
+              fillColor = '#FFFFFF';
               textColor = '#000000';
             } else {
-              fillColor = '#FFC700'; // Default Yellow
+              fillColor = '#FFC700';
               textColor = '#0F172A';
             }
           }
@@ -362,6 +378,12 @@
       }
     };
 
+    socket.on('connect', () => {
+      if (roomIdParam && roomIdParam.trim()) {
+        socket.emit('join:room', { roomId: roomIdParam.trim() });
+      }
+    });
+
     socket.on('state:update', (data) => {
       gameState = data;
       renderBoard();
@@ -371,7 +393,9 @@
       document.getElementById('playerTimerDisplay').textContent = `${seconds}s`;
     });
 
-    socket.emit('get:state');
+    if (roomIdParam && roomIdParam.trim()) {
+      socket.emit('join:room', { roomId: roomIdParam.trim() });
+    }
   </script>
 </body>
 </html>
