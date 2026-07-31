@@ -77,6 +77,95 @@ function getOrCreateRoom(roomId) {
 // Pre-initialize default room 123456
 getOrCreateRoom('123456');
 
+// Hexagon connectivity helpers
+function getHexNeighbors(index) {
+  const col = Math.floor(index / 4);
+  const row = index % 4;
+  const neighbors = [];
+
+  const offsets = (col % 2 === 0) 
+    ? [
+        [0, -1], [0, 1],
+        [-1, -1], [-1, 0],
+        [1, -1], [1, 0]
+      ]
+    : [
+        [0, -1], [0, 1],
+        [-1, 0], [-1, 1],
+        [1, 0], [1, 1]
+      ];
+
+  for (const [dc, dr] of offsets) {
+    const nc = col + dc;
+    const nr = row + dr;
+    if (nc >= 0 && nc < 5 && nr >= 0 && nr < 4) {
+      neighbors.push(nc * 4 + nr);
+    }
+  }
+  return neighbors;
+}
+
+function hasConnectingPath(cellColors, targetColor, orientation) {
+  if (!cellColors || cellColors.length !== 20) return false;
+  const queue = [];
+  const visited = new Set();
+
+  if (orientation === 'LR') {
+    for (let row = 0; row < 4; row++) {
+      const idx = 0 * 4 + row;
+      if (cellColors[idx] === targetColor) {
+        queue.push(idx);
+        visited.add(idx);
+      }
+    }
+  } else if (orientation === 'TB') {
+    for (let col = 0; col < 5; col++) {
+      const idx = col * 4 + 0;
+      if (cellColors[idx] === targetColor) {
+        queue.push(idx);
+        visited.add(idx);
+      }
+    }
+  }
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const currCol = Math.floor(current / 4);
+    const currRow = current % 4;
+
+    if (orientation === 'LR' && currCol === 4) return true;
+    if (orientation === 'TB' && currRow === 3) return true;
+
+    for (const nbr of getHexNeighbors(current)) {
+      if (!visited.has(nbr) && cellColors[nbr] === targetColor) {
+        visited.add(nbr);
+        queue.push(nbr);
+      }
+    }
+  }
+
+  return false;
+}
+
+function checkAndApplyWinCondition(room) {
+  const r = room.currentRound;
+  const board = room.roundBoards[r];
+  if (!board || !board.visible) return;
+
+  if (r === 1 || r === 2) {
+    const blueWin = hasConnectingPath(board.cellColors, 'blue', 'LR');
+    const whiteWin = hasConnectingPath(board.cellColors, 'white', 'TB');
+    if (blueWin || whiteWin) {
+      room.flashEffect = { type: 'green', expireTime: Date.now() + 5000 };
+    }
+  } else if (r === 3) {
+    const yellowWin = hasConnectingPath(board.cellColors, 'yellow', 'LR');
+    if (yellowWin) {
+      room.flashEffect = { type: 'green', expireTime: Date.now() + 5000 };
+    }
+  }
+}
+
 function sanitizeRoomState(room) {
   return {
     credentials: room.credentials,
@@ -86,7 +175,8 @@ function sanitizeRoomState(room) {
     timer: {
       seconds: room.timer.seconds,
       running: room.timer.running
-    }
+    },
+    flashEffect: room.flashEffect || null
   };
 }
 
@@ -106,6 +196,21 @@ function startTimer(roomId) {
         room.timer.running = false;
         if (room.timerInterval) clearInterval(room.timerInterval);
         room.timerInterval = null;
+
+        // Check failure condition for Round 3 timeout
+        if (room.currentRound === 3) {
+          const yellowWin = hasConnectingPath(room.roundBoards[3].cellColors, 'yellow', 'LR');
+          if (!yellowWin) {
+            if (room.roundBoards[3].selectedIndices && room.roundBoards[3].selectedIndices.length > 0) {
+              room.roundBoards[3].selectedIndices.forEach(idx => {
+                room.roundBoards[3].cellColors[idx] = 'black';
+              });
+              room.roundBoards[3].selectedIndices = [];
+            }
+            room.flashEffect = { type: 'red', expireTime: Date.now() + 5000 };
+          }
+        }
+
         io.to(roomId).emit('state:update', sanitizeRoomState(room));
       }
     }
@@ -223,6 +328,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(joinedRoomId);
     if (room && [1, 2, 3].includes(round)) {
       room.currentRound = round;
+      room.flashEffect = null;
       io.to(joinedRoomId).emit('state:update', sanitizeRoomState(room));
     }
   });
@@ -244,6 +350,7 @@ io.on('connection', (socket) => {
     room.roundBoards[r].cellColors = Array(20).fill(r === 3 ? 'white' : 'yellow');
     room.roundBoards[r].selectedIndices = [];
     room.roundBoards[r].showAnimKey = Date.now();
+    room.flashEffect = null;
     io.to(joinedRoomId).emit('state:update', sanitizeRoomState(room));
   });
 
@@ -282,6 +389,7 @@ io.on('connection', (socket) => {
         }
       });
       board.selectedIndices = [];
+      checkAndApplyWinCondition(room);
       io.to(joinedRoomId).emit('state:update', sanitizeRoomState(room));
     }
   });

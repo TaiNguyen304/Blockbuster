@@ -477,6 +477,9 @@
       svg.appendChild(defs);
 
       outerHexes.forEach(o => {
+        if (isRound3 && (o.row === -1 || o.row === 4)) {
+          return; // Skip top 5 and bottom 5 outer hexes in Round 3
+        }
         let cx = startX + o.col * colStep;
         let cy = startY + o.row * rowStep + (Math.abs(o.col) % 2 === 1 ? rowStep * 0.5 : 0);
 
@@ -510,11 +513,11 @@
           let fillColor = 'url(#pat-gold)';
           let textColor = '#0F172A';
 
-          if (isRound3) {
-            if (colorState === 'black') {
-              fillColor = '#0F172A';
-              textColor = '#FFFFFF';
-            } else if (colorState === 'yellow' || colorState === 'blue') {
+          if (colorState === 'black') {
+            fillColor = '#000000';
+            textColor = '#FFFFFF';
+          } else if (isRound3) {
+            if (colorState === 'yellow' || colorState === 'blue') {
               fillColor = 'url(#pat-gold)';
               textColor = '#0F172A';
             } else {
@@ -603,8 +606,29 @@
       socket.emit('round:switch', round);
     }
 
+    let flashTimer = null;
+    function updateFlashEffect() {
+      if (gameState && gameState.flashEffect && gameState.flashEffect.type) {
+        const remaining = gameState.flashEffect.expireTime - Date.now();
+        if (remaining > 0) {
+          if (gameState.flashEffect.type === 'green') {
+            document.body.style.background = '#059669';
+          } else if (gameState.flashEffect.type === 'red') {
+            document.body.style.background = '#dc2626';
+          }
+          if (flashTimer) clearTimeout(flashTimer);
+          flashTimer = setTimeout(() => {
+            document.body.style.background = 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)';
+          }, remaining);
+          return;
+        }
+      }
+      document.body.style.background = 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)';
+    }
+
     function updateUIState() {
       if (!gameState) return;
+      updateFlashEffect();
       const r = gameState.currentRound;
 
       if (gameState.credentials) {
