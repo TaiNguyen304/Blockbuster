@@ -360,14 +360,14 @@
 
       const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
       defs.innerHTML = `
-        <pattern id="pat-blue" patternUnits="objectBoundingBox" width="1" height="1">
-          <image href="BBBlue.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
+        <pattern id="pat-blue" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox" width="1" height="1">
+          <image href="BBBlue.png" xlink:href="BBBlue.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
         </pattern>
-        <pattern id="pat-gold" patternUnits="objectBoundingBox" width="1" height="1">
-          <image href="BBGold.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
+        <pattern id="pat-gold" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox" width="1" height="1">
+          <image href="BBGold.png" xlink:href="BBGold.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
         </pattern>
-        <pattern id="pat-white" patternUnits="objectBoundingBox" width="1" height="1">
-          <image href="BBWhite.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
+        <pattern id="pat-white" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox" width="1" height="1">
+          <image href="BBWhite.png" xlink:href="BBWhite.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none" />
         </pattern>
       `;
       svg.appendChild(defs);
