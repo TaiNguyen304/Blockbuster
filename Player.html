@@ -17,92 +17,6 @@
       color: #ffffff;
       overflow-x: hidden;
     }
-
-    .hex-cell {
-      transition: filter 0.2s ease, transform 0.2s ease;
-    }
-
-    /* Animation 1: Reveal Board Cells (Rotate Y counter-clockwise + scale up simultaneously) */
-    @keyframes revealBoardCell {
-      0% {
-        transform: rotateY(-360deg) scale(0);
-        opacity: 0;
-      }
-      100% {
-        transform: rotateY(0deg) scale(1);
-        opacity: 1;
-      }
-    }
-
-    .cell-reveal {
-      transform-box: fill-box;
-      transform-origin: center;
-      animation: revealBoardCell 0.7s cubic-bezier(0.34, 1.25, 0.64, 1) forwards;
-    }
-
-    /* Animation 2: Selected cell blinking continuously between current color and black */
-    @keyframes blinkSelectedPolygon {
-      0%, 100% {
-        fill: var(--cell-color);
-      }
-      50% {
-        fill: #000000;
-      }
-    }
-
-    @keyframes blinkSelectedText {
-      0%, 100% {
-        fill: var(--text-color);
-      }
-      50% {
-        fill: #ffffff;
-      }
-    }
-
-    .cell-selected polygon {
-      animation: blinkSelectedPolygon 0.6s infinite ease-in-out !important;
-    }
-
-    .cell-selected text {
-      animation: blinkSelectedText 0.6s infinite ease-in-out !important;
-    }
-
-    /* Animation 3: Coloring a cell (rotates 180 degrees counter-clockwise) */
-    @keyframes flipColorCell {
-      0% {
-        transform: rotateY(0deg);
-      }
-      50% {
-        transform: rotateY(-90deg);
-      }
-      100% {
-        transform: rotateY(-180deg);
-      }
-    }
-
-    @keyframes flipColorText {
-      0% {
-        transform: rotateY(0deg);
-      }
-      50% {
-        transform: rotateY(-90deg);
-      }
-      100% {
-        transform: rotateY(-180deg) scaleX(-1);
-      }
-    }
-
-    .cell-flip-color {
-      transform-box: fill-box;
-      transform-origin: center;
-      animation: flipColorCell 0.6s ease-in-out forwards;
-    }
-
-    .cell-flip-color text {
-      transform-box: fill-box;
-      transform-origin: center;
-      animation: flipColorText 0.6s ease-in-out forwards;
-    }
     .buzzer-unlocked {
       background: #059669; /* Green */
       color: #ffffff;
@@ -128,6 +42,56 @@
       src: url('Aptos.ttf') format('truetype');
       font-weight: bold;
       font-style: normal;
+    }
+
+    /* SVG Animation Styles */
+    svg g, svg polygon {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    /* 1. Animation HIỆN BẢNG: Xoay ngang ngược chiều kim đồng hồ + To dần */
+    .anim-show-board {
+      animation: showBoardEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes showBoardEntrance {
+      0% {
+        transform: scale(0) rotateY(-360deg);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1) rotateY(0deg);
+        opacity: 1;
+      }
+    }
+
+    /* 2. Animation ô được chọn: Nhấp nháy liên tục giữa màu hiện tại của ô và màu đen */
+    .anim-selected-blink {
+      animation: selectedBlink 0.7s infinite alternate ease-in-out !important;
+    }
+
+    @keyframes selectedBlink {
+      0% {
+        fill: var(--cell-current-color, #FFC700);
+      }
+      100% {
+        fill: #000000;
+      }
+    }
+
+    /* 3. Animation khi tô màu ô: Xoay 180 độ ngược chiều kim đồng hồ */
+    .anim-color-rotate {
+      animation: colorRotate180 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes colorRotate180 {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(-180deg);
+      }
     }
   </style>
 </head>
@@ -219,7 +183,6 @@
 
   <!-- Player Script -->
   <script>
-    // Disable DevTools
     function disableDevTools() {
       document.addEventListener('contextmenu', (e) => e.preventDefault());
       document.addEventListener('keydown', (e) => {
@@ -235,12 +198,10 @@
     }
     disableDevTools();
 
-    // Check URL parameters ?roomid and ?auth
     const urlParams = new URLSearchParams(window.location.search);
     const roomIdParam = urlParams.get('roomid');
     const authParam = urlParams.get('auth');
 
-    // If missing parameters -> Redirect to login page immediately
     if (!roomIdParam || !authParam) {
       window.location.href = '/index.html?reason=missing';
     } else {
@@ -249,12 +210,9 @@
 
     const socket = io();
     let gameState = null;
-    let previousBoardVisible = false;
-    let previousCellColors = [];
-    let previousRound = null;
-    let isBoardJustShown = false;
+    let prevShowAnimKey = 0;
+    let prevCellColors = Array(20).fill('');
 
-    // Flat Hex Geometry (rotated 30 degrees)
     function getFlatHexPolygon(cx, cy, r) {
       let pts = [];
       for (let i = 0; i < 6; i++) {
@@ -274,7 +232,6 @@
 
       if (!gameState) return;
 
-      // Validate credentials against server state
       if (gameState.credentials) {
         const { roomId, playerPassword } = gameState.credentials;
         if (roomIdParam.trim() !== String(roomId).trim() || authParam.trim() !== String(playerPassword).trim()) {
@@ -286,12 +243,10 @@
       const r = gameState.currentRound;
       const roundBoard = gameState.roundBoards[r];
 
-      // Update Round Name Header
       const roundNames = { 1: 'VÒNG 1', 2: 'VÒNG 2', 3: 'VÒNG ĐẶC BIỆT' };
       document.getElementById('roundHeader').textContent = roundNames[r] || `VÒNG ${r}`;
       document.getElementById('playerTimerDisplay').textContent = `${gameState.timer.seconds}s`;
 
-      // Update Right Panel Boxes
       const boxPlayer = document.getElementById('boxPlayer');
       const playerStatusText = document.getElementById('playerStatusText');
       const boxCouple = document.getElementById('boxCouple');
@@ -313,7 +268,6 @@
         coupleStatusText.textContent = 'CHỜ CHUÔNG';
       }
 
-      // Update Buzzer Button State
       const btnBuzzer = document.getElementById('btnPlayerBuzzer');
       const buzzerBtnText = document.getElementById('buzzerBtnText');
 
@@ -327,34 +281,34 @@
         buzzerBtnText.textContent = 'BẤM CHUÔNG!';
       }
 
-      const isVisible = roundBoard ? roundBoard.visible : false;
-      if (!isVisible) {
+      if (!roundBoard || !roundBoard.visible) {
         placeholder.classList.remove('hidden');
         boardContainer.classList.add('hidden');
-        previousBoardVisible = false;
         return;
       }
 
       placeholder.classList.add('hidden');
       boardContainer.classList.remove('hidden');
 
-      if (isVisible && (!previousBoardVisible || previousRound !== r || isBoardJustShown)) {
-        isBoardJustShown = true;
-      }
-
       const letters = roundBoard.letters || [];
       const cellColors = roundBoard.cellColors || [];
       const selectedIndices = roundBoard.selectedIndices || [];
+      const showAnimKey = roundBoard.showAnimKey || 0;
 
       const hexRadius = 42;
-      const colStep = 1.5 * hexRadius; // 63
-      const rowStep = Math.sqrt(3) * hexRadius; // ~72.74
+      const colStep = 1.5 * hexRadius;
+      const rowStep = Math.sqrt(3) * hexRadius;
       const startX = 130;
       const startY = 110;
 
       const isRound3 = (r === 3);
 
-      // Outer Decorative Blue & White Hexes
+      const shouldShowAnim = (showAnimKey !== prevShowAnimKey && showAnimKey > 0);
+      if (shouldShowAnim) {
+        prevShowAnimKey = showAnimKey;
+      }
+
+      // Outer Decorative Hexes
       const outerHexes = [
         { col: -1, row: -1, type: 'blue' },
         { col: -1, row: 0, type: 'blue' },
@@ -410,10 +364,7 @@
           let textColor = '#0F172A';
 
           if (isRound3) {
-            if (isSelected) {
-              fillColor = '#F97316';
-              textColor = '#FFFFFF';
-            } else if (colorState === 'black') {
+            if (colorState === 'black') {
               fillColor = '#0F172A';
               textColor = '#FFFFFF';
             } else if (colorState === 'yellow' || colorState === 'blue') {
@@ -424,10 +375,7 @@
               textColor = '#0F172A';
             }
           } else {
-            if (isSelected) {
-              fillColor = '#F97316';
-              textColor = '#FFFFFF';
-            } else if (colorState === 'blue') {
+            if (colorState === 'blue') {
               fillColor = '#2563EB';
               textColor = '#FFFFFF';
             } else if (colorState === 'white') {
@@ -439,33 +387,31 @@
             }
           }
 
-          const isColorChanged = previousBoardVisible && (previousRound === r) && (!isBoardJustShown) &&
-                                 (previousCellColors[cellIdx] !== undefined) &&
-                                 (previousCellColors[cellIdx] !== colorState);
+          const baseColor = fillColor;
 
           const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-          let classList = ['hex-cell'];
 
-          if (isBoardJustShown) {
-            classList.push('cell-reveal');
-            g.style.animationDelay = `${cellIdx * 30}ms`;
-          } else if (isColorChanged) {
-            classList.push('cell-flip-color');
+          const colorChanged = prevCellColors[cellIdx] && prevCellColors[cellIdx] !== colorState;
+
+          if (shouldShowAnim) {
+            g.classList.add('anim-show-board');
+            g.style.animationDelay = `${(col + row) * 0.04}s`;
+          } else if (colorChanged) {
+            g.classList.add('anim-color-rotate');
           }
-
-          if (isSelected) {
-            classList.push('cell-selected');
-            g.style.setProperty('--cell-color', fillColor);
-            g.style.setProperty('--text-color', textColor);
-          }
-
-          g.setAttribute('class', classList.join(' '));
 
           const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
           poly.setAttribute('points', pts);
           poly.setAttribute('fill', fillColor);
-          poly.setAttribute('stroke', '#0F172A');
+          poly.setAttribute('stroke', isSelected ? '#FFFFFF' : '#0F172A');
           poly.setAttribute('stroke-width', '4');
+
+          if (isSelected) {
+            poly.style.setProperty('--cell-current-color', baseColor);
+            poly.classList.add('anim-selected-blink');
+            textColor = '#FFFFFF';
+          }
+
           g.appendChild(poly);
 
           if (letter) {
@@ -486,13 +432,9 @@
         }
       }
 
-      previousBoardVisible = isVisible;
-      previousCellColors = [...cellColors];
-      previousRound = r;
-      isBoardJustShown = false;
+      prevCellColors = [...cellColors];
     }
 
-    // Buzzer click action
     document.getElementById('btnPlayerBuzzer').onclick = () => {
       if (gameState && !gameState.buzzer.locked && !gameState.buzzer.pressedBy) {
         socket.emit('buzzer:press', { team: 'player' });
