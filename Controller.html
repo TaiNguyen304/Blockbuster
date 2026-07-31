@@ -41,6 +41,14 @@
       color: #ffffff !important;
       border-color: #fb923c !important;
     }
+
+    @font-face {
+      font-family: 'Aptos';
+      src: url('Aptos.ttf') format('truetype');
+      font-weight: bold;
+      /* Hoặc 700 */
+      font-style: normal;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-900 text-slate-100 selection:bg-amber-500 selection:text-slate-900">
@@ -419,9 +427,9 @@
             text.setAttribute('y', cy + 9);
             text.setAttribute('text-anchor', 'middle');
             text.setAttribute('fill', textColor);
-            text.setAttribute('font-size', '28');
-            text.setAttribute('font-weight', '900');
-            text.setAttribute('font-family', 'Plus Jakarta Sans, sans-serif');
+            text.setAttribute('font-size', '22');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('font-family', 'Aptos, sans-serif');
             text.textContent = letter;
             g.appendChild(text);
           }
