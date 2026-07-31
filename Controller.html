@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,23 +8,29 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap"
+    rel="stylesheet">
   <style>
     * {
       font-weight: bold !important;
     }
+
     body {
       font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
       background-color: #0f172a;
       color: #f8fafc;
     }
+
     .hex-cell-outer {
       cursor: pointer;
       transition: filter 0.2s ease;
     }
+
     .hex-cell-outer:hover {
       filter: brightness(1.2);
     }
+
     .toast {
       position: fixed;
       top: 20px;
@@ -31,11 +38,16 @@
       z-index: 9999;
       transition: all 0.3s ease;
     }
-    button, .tab-btn {
+
+    button,
+    .tab-btn {
       transition: all 0.2s ease;
     }
-    button:hover, .tab-btn:hover {
-      background-color: #f97316 !important; /* Orange */
+
+    button:hover,
+    .tab-btn:hover {
+      background-color: #f97316 !important;
+      /* Orange */
       color: #ffffff !important;
       border-color: #fb923c !important;
     }
@@ -68,6 +80,7 @@
         transform: scale(0) rotateY(-360deg);
         opacity: 0;
       }
+
       100% {
         transform: scale(1) rotateY(0deg);
         opacity: 1;
@@ -83,6 +96,7 @@
       0% {
         fill: var(--cell-current-color, #FFC700);
       }
+
       100% {
         fill: #000000;
       }
@@ -97,6 +111,7 @@
       0% {
         transform: rotateY(0deg);
       }
+
       100% {
         transform: rotateY(-180deg);
       }
@@ -110,26 +125,31 @@
       0% {
         transform: rotateY(0deg);
       }
+
       100% {
         transform: rotateY(180deg);
       }
     }
   </style>
 </head>
+
 <body class="min-h-screen flex flex-col bg-slate-900 text-slate-100 selection:bg-amber-500 selection:text-slate-900">
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast flex flex-col gap-2"></div>
 
   <!-- Top Navigation Header -->
-  <header class="bg-slate-800/90 border-b border-slate-700/80 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xl backdrop-blur-md">
+  <header
+    class="bg-slate-800/90 border-b border-slate-700/80 px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-xl backdrop-blur-md">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20 border-2 border-amber-300">
+      <div
+        class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20 border-2 border-amber-300">
         B
       </div>
       <div>
         <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-          CONTROLLER <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">BLOCKBUSTER</span>
+          CONTROLLER <span
+            class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">BLOCKBUSTER</span>
         </h1>
         <p class="text-xs text-slate-400 font-bold">Màn hình điều khiển Game Show trung tâm</p>
       </div>
@@ -138,19 +158,32 @@
     <!-- Excel Upload & Quick Links -->
     <div class="flex flex-wrap items-center gap-3">
       <input type="file" id="excelInput" accept=".xlsx, .xls" class="hidden">
-      <button id="btnUploadExcel" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-orange-500 hover:to-orange-500 hover:text-white text-white font-bold text-sm shadow-lg border border-emerald-400/30 flex items-center gap-2 transition active:scale-95">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+      <button id="btnUploadExcel"
+        class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-orange-500 hover:to-orange-500 hover:text-white text-white font-bold text-sm shadow-lg border border-emerald-400/30 flex items-center gap-2 transition active:scale-95">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+          </path>
+        </svg>
         <span>Nhập đề từ Excel</span>
       </button>
 
-      <a id="btnOpenViewer" href="/Viewer.html" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-orange-500 hover:text-white text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
+      <a id="btnOpenViewer" href="/Viewer.html" target="_blank"
+        class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-orange-500 hover:text-white text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
         <span>Mở Viewer</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+        </svg>
       </a>
 
-      <a id="btnOpenHost" href="/Host.html" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-orange-500 hover:text-white text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
+      <a id="btnOpenHost" href="/Host.html" target="_blank"
+        class="px-4 py-2.5 rounded-xl bg-slate-700/80 hover:bg-orange-500 hover:text-white text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-1.5 transition">
         <span>Mở Host</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+        </svg>
       </a>
     </div>
   </header>
@@ -159,11 +192,15 @@
   <main class="flex-1 p-4 md:p-6 max-w-7xl w-full mx-auto flex flex-col gap-6">
 
     <!-- Active Round Status Banner -->
-    <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+    <div
+      class="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <span class="text-slate-400 text-sm font-semibold">Vòng hiện tại:</span>
-        <span id="activeRoundLabel" class="text-amber-400 font-black text-lg bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">VÒNG 1</span>
-        <span id="boardStatusBadge" class="text-xs px-2.5 py-1 rounded-md font-bold bg-slate-700 text-slate-300">Chưa hiện bảng</span>
+        <span id="activeRoundLabel"
+          class="text-amber-400 font-black text-lg bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20">VÒNG
+          1</span>
+        <span id="boardStatusBadge" class="text-xs px-2.5 py-1 rounded-md font-bold bg-slate-700 text-slate-300">Chưa
+          hiện bảng</span>
       </div>
 
       <!-- Live Buzzer & Timer Status Indicators -->
@@ -180,11 +217,16 @@
     </div>
 
     <!-- MỤC TẠO MÃ PHÒNG VÀ MẬT KHẨU -->
-    <div class="bg-slate-800/80 border-2 border-amber-500/30 rounded-2xl p-5 flex flex-col gap-4 shadow-xl relative overflow-hidden">
+    <div
+      class="bg-slate-800/80 border-2 border-amber-500/30 rounded-2xl p-5 flex flex-col gap-4 shadow-xl relative overflow-hidden">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z"/></svg>
+          <div
+            class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z" />
+            </svg>
           </div>
           <div>
             <h2 class="text-base font-black text-white uppercase tracking-wider">TẠO MÃ PHÒNG & MẬT KHẨU</h2>
@@ -192,8 +234,12 @@
           </div>
         </div>
 
-        <button id="btnGenerateCredentials" class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-orange-500 hover:to-orange-500 hover:text-white text-slate-950 font-black text-sm shadow-md border border-amber-300 transition active:scale-95 flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <button id="btnGenerateCredentials"
+          class="py-2.5 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-orange-500 hover:to-orange-500 hover:text-white text-slate-950 font-black text-sm shadow-md border border-amber-300 transition active:scale-95 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
           <span>TẠO MÃ PHÒNG MỚI</span>
         </button>
       </div>
@@ -221,9 +267,10 @@
 
     <!-- Main Board & Control Panel Split -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      
+
       <!-- Left Column: Hex Grid Interactive Canvas (7 cols) -->
-      <div class="lg:col-span-7 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center min-h-[460px] shadow-xl relative overflow-hidden">
+      <div
+        class="lg:col-span-7 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center min-h-[460px] shadow-xl relative overflow-hidden">
         <div class="absolute top-3 left-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
           Màn hình xem trước ô chữ (Bấm vào ô để chọn)
         </div>
@@ -236,16 +283,28 @@
 
         <div class="mt-2 text-xs text-slate-400 flex items-center gap-4 font-semibold">
           <div id="legendRound12" class="flex items-center gap-4">
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block border border-black"></span> Mặc định (Vàng)</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white"></span> Đang chọn (Cam)</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block"></span> Tô xanh</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-400"></span> Tô trắng</span>
+            <span class="flex items-center gap-1.5"><span
+                class="w-3 h-3 rounded-full bg-amber-400 inline-block border border-black"></span> Mặc định
+              (Vàng)</span>
+            <span class="flex items-center gap-1.5"><span
+                class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white"></span> Đang chọn
+              (Cam)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block"></span>
+              Tô xanh</span>
+            <span class="flex items-center gap-1.5"><span
+                class="w-3 h-3 rounded-full bg-white inline-block border border-slate-400"></span> Tô trắng</span>
           </div>
           <div id="legendRound3" class="flex items-center gap-4 hidden">
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-white inline-block border border-slate-400"></span> Mặc định (Trắng)</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white"></span> Đang chọn (Cam)</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block border border-black"></span> Tô vàng</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-900 inline-block border border-slate-500"></span> Tô đen</span>
+            <span class="flex items-center gap-1.5"><span
+                class="w-3 h-3 rounded-full bg-white inline-block border border-slate-400"></span> Mặc định
+              (Trắng)</span>
+            <span class="flex items-center gap-1.5"><span
+                class="w-3 h-3 rounded-full bg-orange-500 inline-block border border-white"></span> Đang chọn
+              (Cam)</span>
+            <span class="flex items-center gap-1.5"><span
+                class="w-3 h-3 rounded-full bg-amber-400 inline-block border border-black"></span> Tô vàng</span>
+            <span class="flex items-center gap-1.5"><span
+                class="w-3 h-3 rounded-full bg-slate-900 inline-block border border-slate-500"></span> Tô đen</span>
           </div>
         </div>
       </div>
@@ -257,34 +316,47 @@
         <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl">
           <h2 class="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
             <span>ĐIỀU KHIỂN BẢNG</span>
-            <span id="selectedCount" class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Đã chọn: 0 ô</span>
+            <span id="selectedCount"
+              class="text-xs text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Đã
+              chọn: 0 ô</span>
           </h2>
 
-          <button id="btnShowBoard" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-orange-500 hover:to-orange-500 hover:text-white text-slate-950 font-black text-base shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+          <button id="btnShowBoard"
+            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-orange-500 hover:to-orange-500 hover:text-white text-slate-950 font-black text-base shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+              </path>
+            </svg>
             <span>HIỆN BẢNG</span>
           </button>
 
           <!-- Color Buttons for Selected Cells -->
           <div id="round12ColorGroup" class="grid grid-cols-2 gap-3 pt-1">
-            <button id="btnColorBlue" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-orange-500 hover:text-white text-white font-black text-sm shadow-lg border border-blue-400/30 transition active:scale-95 flex items-center justify-center gap-2">
+            <button id="btnColorBlue"
+              class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-orange-500 hover:text-white text-white font-black text-sm shadow-lg border border-blue-400/30 transition active:scale-95 flex items-center justify-center gap-2">
               <span class="w-4 h-4 rounded-full bg-blue-400 border border-white"></span>
               <span>TÔ XANH</span>
             </button>
 
-            <button id="btnColorWhite" class="py-3 px-4 rounded-xl bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-900 font-black text-sm shadow-lg border border-slate-300 transition active:scale-95 flex items-center justify-center gap-2">
+            <button id="btnColorWhite"
+              class="py-3 px-4 rounded-xl bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-900 font-black text-sm shadow-lg border border-slate-300 transition active:scale-95 flex items-center justify-center gap-2">
               <span class="w-4 h-4 rounded-full bg-white border border-slate-400"></span>
               <span>TÔ TRẮNG</span>
             </button>
           </div>
 
           <div id="round3ColorGroup" class="grid grid-cols-2 gap-3 pt-1 hidden">
-            <button id="btnColorYellow" class="py-3 px-4 rounded-xl bg-amber-500 hover:bg-orange-500 hover:text-white text-slate-950 font-black text-sm shadow-lg border border-amber-400/30 transition active:scale-95 flex items-center justify-center gap-2">
+            <button id="btnColorYellow"
+              class="py-3 px-4 rounded-xl bg-amber-500 hover:bg-orange-500 hover:text-white text-slate-950 font-black text-sm shadow-lg border border-amber-400/30 transition active:scale-95 flex items-center justify-center gap-2">
               <span class="w-4 h-4 rounded-full bg-amber-400 border border-black"></span>
               <span>TÔ VÀNG</span>
             </button>
 
-            <button id="btnColorBlack" class="py-3 px-4 rounded-xl bg-slate-900 hover:bg-orange-500 hover:text-white text-white font-black text-sm shadow-lg border border-slate-700 transition active:scale-95 flex items-center justify-center gap-2">
+            <button id="btnColorBlack"
+              class="py-3 px-4 rounded-xl bg-slate-900 hover:bg-orange-500 hover:text-white text-white font-black text-sm shadow-lg border border-slate-700 transition active:scale-95 flex items-center justify-center gap-2">
               <span class="w-4 h-4 rounded-full bg-black border border-white"></span>
               <span>TÔ ĐEN</span>
             </button>
@@ -292,46 +364,57 @@
         </div>
 
         <!-- Buzzer Controls Panel -->
-        <div id="panelBuzzerControls" class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl">
+        <div id="panelBuzzerControls"
+          class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl">
           <h2 class="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
             <span>ĐIỀU KHIỂN CHUÔNG</span>
-            <span id="pressedByBadge" class="text-xs px-2 py-0.5 rounded font-bold bg-slate-700 text-slate-300">Chưa ai bấm</span>
+            <span id="pressedByBadge" class="text-xs px-2 py-0.5 rounded font-bold bg-slate-700 text-slate-300">Chưa ai
+              bấm</span>
           </h2>
 
           <div class="grid grid-cols-2 gap-3">
-            <button id="btnOpenBuzzer" class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnOpenBuzzer"
+              class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               MỞ CHUÔNG
             </button>
-            <button id="btnLockBuzzer" class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnLockBuzzer"
+              class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               KHÓA CHUÔNG
             </button>
-            <button id="btnResetOpenBuzzer" class="py-3 px-3 rounded-xl bg-teal-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnResetOpenBuzzer"
+              class="py-3 px-3 rounded-xl bg-teal-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               RESET VÀ MỞ
             </button>
-            <button id="btnResetLockBuzzer" class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnResetLockBuzzer"
+              class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               RESET VÀ KHÓA
             </button>
           </div>
         </div>
 
         <!-- Timer Controls Panel -->
-        <div id="panelTimerControls" class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl hidden">
+        <div id="panelTimerControls"
+          class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 flex flex-col gap-4 shadow-xl hidden">
           <h2 class="text-sm font-extrabold text-slate-300 uppercase tracking-wider flex items-center justify-between">
             <span>ĐIỀU KHIỂN ĐỒNG HỒ</span>
             <span id="timerValueDisplay" class="text-xl font-black text-amber-400">60s</span>
           </h2>
 
           <div class="grid grid-cols-2 gap-3">
-            <button id="btnStart60s" class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnStart60s"
+              class="py-3 px-3 rounded-xl bg-emerald-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               BẮT ĐẦU 60S
             </button>
-            <button id="btnPauseTimer" class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnPauseTimer"
+              class="py-3 px-3 rounded-xl bg-amber-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               TẠM DỪNG
             </button>
-            <button id="btnContinueTimer" class="py-3 px-3 rounded-xl bg-indigo-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnContinueTimer"
+              class="py-3 px-3 rounded-xl bg-indigo-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               TIẾP TỤC
             </button>
-            <button id="btnResetTimer" class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
+            <button id="btnResetTimer"
+              class="py-3 px-3 rounded-xl bg-rose-600 hover:bg-orange-500 hover:text-white text-white font-extrabold text-xs md:text-sm shadow-md transition active:scale-95">
               RESET ĐỒNG HỒ
             </button>
           </div>
@@ -344,13 +427,16 @@
   <!-- Bottom Navigation Round Buttons -->
   <footer class="bg-slate-800/90 border-t border-slate-700/80 py-4 px-6 mt-auto">
     <div class="max-w-xl mx-auto grid grid-cols-3 gap-3 md:gap-4">
-      <button id="tabRound1" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20">
+      <button id="tabRound1"
+        class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20">
         VÒNG 1
       </button>
-      <button id="tabRound2" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-orange-500 hover:text-white">
+      <button id="tabRound2"
+        class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-orange-500 hover:text-white">
         VÒNG 2
       </button>
-      <button id="tabRound3" class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-orange-500 hover:text-white">
+      <button id="tabRound3"
+        class="tab-btn py-3 px-4 rounded-xl font-black text-sm md:text-base border transition bg-slate-700 text-slate-300 border-slate-600 hover:bg-orange-500 hover:text-white">
         VÒNG ĐẶC BIỆT
       </button>
     </div>
@@ -575,14 +661,35 @@
           if (letter) {
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', '0');
-            text.setAttribute('y', '9');
+
+            // y="0" kết hợp dominant-baseline="central" giữ chữ luôn đúng tâm (0,0) khi font-size thay đổi
+            text.setAttribute('y', '0');
             text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'central');
+
             text.setAttribute('fill', textColor);
-            text.setAttribute('font-size', '22');
             text.setAttribute('font-weight', 'bold');
             text.setAttribute('font-family', 'Aptos, sans-serif');
             text.textContent = letter;
+
+            // 1. Đặt font-size ban đầu là 30
+            let fontSize = 30;
+            text.setAttribute('font-size', fontSize);
+
+            // 2. Append vào DOM trước để có thể dùng getBBox()
             gAnim.appendChild(text);
+
+            // 3. Giới hạn khung hình 66px (có thể trừ bớt 2-4px padding nếu không muốn chữ chạm sát viền)
+            const maxBoundary = 66;
+            const minFontSize = 10;
+
+            // 4. Vòng lặp giảm font-size đến khi vừa vặn
+            let bbox = text.getBBox();
+            while ((bbox.width > maxBoundary || bbox.height > maxBoundary) && fontSize > minFontSize) {
+              fontSize -= 1;
+              text.setAttribute('font-size', fontSize);
+              bbox = text.getBBox(); // Cập nhật lại kích thước sau khi giảm font
+            }
           }
 
           gOuter.appendChild(gAnim);
@@ -873,4 +980,5 @@
     }
   </script>
 </body>
+
 </html>
