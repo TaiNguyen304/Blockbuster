@@ -16,7 +16,6 @@
     background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
     color: #ffffff;
     overflow-x: hidden;
-    /* ĐÃ BỎ scale: 1.3 Ở ĐÂY */
   }
 
   /* Style phóng to 1.2 riêng cho nội dung bên trái */
@@ -102,7 +101,7 @@
 
   <!-- 80% Left Screen: Viewer Board Layout -->
   <div class="w-full md:w-[80%] min-h-screen p-4 md:p-6 flex flex-col justify-between items-center border-r-4 border-slate-700/80 overflow-hidden">
-    <!-- Thêm Wrapper để Scale 1.2 bên trong -->
+    <!-- Wrapper Scale 1.2 -->
     <div class="left-scale-container">
       <!-- Header Banner -->
       <header class="w-full max-w-5xl flex items-center justify-between bg-slate-800/80 border-2 border-slate-700/80 rounded-2xl px-6 py-4 shadow-2xl backdrop-blur-md">
@@ -112,7 +111,7 @@
           </div>
           <div>
             <h1 class="text-2xl md:text-3xl font-black text-white tracking-wider flex items-center gap-3">
-              MÀN HÌNH PLAYER <span id="roundHeader" class="text-amber-400 bg-amber-500/20 px-3 py-1 rounded-xl border-2 border-amber-500/40 text-lg md:text-xl">VÒNG 1</span>
+              MÀN HÌNH COUPLE <span id="roundHeader" class="text-amber-400 bg-amber-500/20 px-3 py-1 rounded-xl border-2 border-amber-500/40 text-lg md:text-xl">VÒNG 1</span>
             </h1>
           </div>
         </div>
@@ -141,7 +140,7 @@
 
         <!-- Active Hex Board SVG -->
         <div id="boardContainer" class="w-full flex justify-center items-center hidden">
-          <svg id="playerHexBoard" viewBox="0 0 650 500" class="w-full max-w-[650px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+          <svg id="coupleHexBoard" viewBox="0 0 650 500" class="w-full max-w-[650px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
             <!-- Rendered by JS -->
           </svg>
         </div>
@@ -149,7 +148,7 @@
     </div>
   </div>
 
-  <!-- 20% Right Screen: 3 Vertical Boxes + Bottom Right Buzzer Button (KÍCH THƯỚC VÀ SCALE = 1) -->
+  <!-- 20% Right Screen: 3 Vertical Boxes + Bottom Right Buzzer Button -->
   <div class="w-full md:w-[20%] min-h-screen bg-slate-900/90 p-4 md:p-6 flex flex-col justify-between items-center shadow-2xl gap-4">
     <!-- Top 3 Stacked Boxes -->
     <div class="w-full flex flex-col gap-4">
@@ -168,13 +167,13 @@
       <!-- Box 3: CLOCK / TIMER -->
       <div id="boxClock" class="w-full h-24 md:h-28 rounded-2xl bg-red-600 border-4 border-red-400/50 flex flex-col items-center justify-center text-white shadow-xl transition-all duration-300">
         <span class="text-[10px] font-black tracking-widest uppercase opacity-90">ĐỒNG HỒ</span>
-        <span id="playerTimerDisplay" class="text-3xl md:text-4xl font-black tracking-wider text-white">60s</span>
+        <span id="coupleTimerDisplay" class="text-3xl md:text-4xl font-black tracking-wider text-white">60s</span>
       </div>
     </div>
 
     <!-- Bottom Right BUZZER BUTTON -->
     <div class="w-full mt-auto pt-2 flex flex-col items-center">
-      <button id="btnPlayerBuzzer" disabled class="w-full h-28 md:h-36 rounded-3xl border-4 border-slate-700 flex flex-col items-center justify-center gap-1 text-white text-center transition-all duration-200 buzzer-locked select-none">
+      <button id="btnCoupleBuzzer" disabled class="w-full h-28 md:h-36 rounded-3xl border-4 border-slate-700 flex flex-col items-center justify-center gap-1 text-white text-center transition-all duration-200 buzzer-locked select-none">
         <svg class="w-10 h-10 text-white drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
         <span id="buzzerBtnText" class="text-lg md:text-xl font-black tracking-wider">CHUÔNG KHÓA</span>
       </button>
@@ -362,7 +361,7 @@
 
       outerHexes.forEach(o => {
         if (isRound3 && o.col >= 0 && o.col <= 4 && (o.row === -1 || o.row === 4)) {
-          return; // Skip top 5 and bottom 5 outer hexes in Round 3
+          return;
         }
         let cx = startX + o.col * colStep;
         let cy = startY + o.row * rowStep + (Math.abs(o.col) % 2 === 1 ? rowStep * 0.5 : 0);
@@ -455,8 +454,6 @@
           if (letter) {
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', '0');
-
-            // y="0" kết hợp dominant-baseline="central" giữ chữ luôn đúng tâm (0,0) khi font-size thay đổi
             text.setAttribute('y', '0');
             text.setAttribute('text-anchor', 'middle');
             text.setAttribute('dominant-baseline', 'central');
@@ -466,23 +463,19 @@
             text.setAttribute('font-family', 'Aptos, sans-serif');
             text.textContent = letter;
 
-            // 1. Đặt font-size ban đầu là 30
             let fontSize = 22;
             text.setAttribute('font-size', fontSize);
 
-            // 2. Append vào DOM trước để có thể dùng getBBox()
             gAnim.appendChild(text);
 
-            // 3. Giới hạn khung hình 66px (có thể trừ bớt 2-4px padding nếu không muốn chữ chạm sát viền)
             const maxBoundary = 60;
             const minFontSize = 10;
 
-            // 4. Vòng lặp giảm font-size đến khi vừa vặn
             let bbox = text.getBBox();
             while ((bbox.width > maxBoundary || bbox.height > maxBoundary) && fontSize > minFontSize) {
               fontSize -= 1;
               text.setAttribute('font-size', fontSize);
-              bbox = text.getBBox(); // Cập nhật lại kích thước sau khi giảm font
+              bbox = text.getBBox();
             }
           }
 
