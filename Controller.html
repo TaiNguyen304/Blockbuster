@@ -673,14 +673,14 @@
             text.textContent = letter;
 
             // 1. Đặt font-size ban đầu là 30
-            let fontSize = 30;
+            let fontSize = 22;
             text.setAttribute('font-size', fontSize);
 
             // 2. Append vào DOM trước để có thể dùng getBBox()
             gAnim.appendChild(text);
 
             // 3. Giới hạn khung hình 66px (có thể trừ bớt 2-4px padding nếu không muốn chữ chạm sát viền)
-            const maxBoundary = 66;
+            const maxBoundary = 60;
             const minFontSize = 10;
 
             // 4. Vòng lặp giảm font-size đến khi vừa vặn
